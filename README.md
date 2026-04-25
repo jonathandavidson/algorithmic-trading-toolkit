@@ -26,7 +26,7 @@ python cli.py collect
 **version** — show the current version
 
 ```bash
-python cli.py version
+python cli.py --version
 ```
 
 ## Help

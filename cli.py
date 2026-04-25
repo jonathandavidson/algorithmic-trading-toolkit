@@ -23,9 +23,6 @@ def build_parser():
     collect = subparsers.add_parser("collect", help="collect historical data")
     collect.set_defaults(func=cmd_collect)
 
-    version = subparsers.add_parser("version", help="show version")
-    version.set_defaults(func=cmd_version)
-
     return parser
 
 

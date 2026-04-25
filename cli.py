@@ -2,13 +2,8 @@
 import argparse
 import sys
 
-
-def cmd_collect(args):
-    print("collect: not implemented")
-
-
-def cmd_version(args):
-    print("historical-data-collector 0.1.0")
+from lib.commands.collect import cmd_collect
+from lib.commands.version import cmd_version
 
 
 def build_parser():

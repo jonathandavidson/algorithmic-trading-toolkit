@@ -17,17 +17,10 @@ python cli.py <command>
 
 ### Commands
 
-**hello** — print a greeting
+**collect** — collect historical data
 
 ```bash
-python cli.py hello
-python cli.py hello --name Alice
-```
-
-**echo** — echo text back
-
-```bash
-python cli.py echo hello world
+python cli.py collect
 ```
 
 **version** — show the current version

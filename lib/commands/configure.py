@@ -50,6 +50,21 @@ def cmd_configure_list_database(args):
         )
 
 
+def cmd_configure_remove_database(args):
+    config = _load_config()
+    databases = config.get("databases", [])
+    if not any(db["name"] == args.name for db in databases):
+        print(f"Database '{args.name}' not found.")
+        return
+    answer = input(f"Remove database '{args.name}'? [y/N] ")
+    if answer.strip().lower() != "y":
+        print("Cancelled.")
+        return
+    config["databases"] = [db for db in databases if db["name"] != args.name]
+    _save_config(config)
+    print(f"Database '{args.name}' removed.")
+
+
 def cmd_configure(args):
     if not hasattr(args, "configure_command") or args.configure_command is None:
         args.configure_parser.print_help()

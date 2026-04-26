@@ -4,7 +4,7 @@ import os
 import pytest
 import yaml
 
-from lib.commands.configure import cmd_configure, cmd_configure_add_database, cmd_configure_list_database
+from lib.commands.configure import cmd_configure, cmd_configure_add_database, cmd_configure_list_database, cmd_configure_remove_database
 
 
 def test_cmd_configure_no_subcommand_prints_help(capsys):
@@ -102,3 +102,33 @@ def test_cmd_configure_add_database_duplicate_name(tmp_path, monkeypatch, capsys
 
     config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
     assert len(config["databases"]) == 1
+
+
+def test_cmd_configure_remove_database_not_found(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_configure_remove_database(argparse.Namespace(name="ghost"))
+    assert "not found" in capsys.readouterr().out
+
+
+def test_cmd_configure_remove_database_confirmed(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_configure_add_database(_make_db_args(name="todelete"))
+    capsys.readouterr()
+    monkeypatch.setattr("builtins.input", lambda _: "y")
+    cmd_configure_remove_database(argparse.Namespace(name="todelete"))
+    assert "removed" in capsys.readouterr().out
+
+    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    assert all(db["name"] != "todelete" for db in config.get("databases", []))
+
+
+def test_cmd_configure_remove_database_cancelled(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_configure_add_database(_make_db_args(name="keep"))
+    capsys.readouterr()
+    monkeypatch.setattr("builtins.input", lambda _: "n")
+    cmd_configure_remove_database(argparse.Namespace(name="keep"))
+    assert "Cancelled" in capsys.readouterr().out
+
+    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    assert any(db["name"] == "keep" for db in config["databases"])

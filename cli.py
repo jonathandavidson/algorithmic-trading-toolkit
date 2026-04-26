@@ -3,7 +3,7 @@ import argparse
 import sys
 
 from lib.commands.collect import cmd_collect
-from lib.commands.configure import cmd_configure, cmd_configure_add_database, cmd_configure_list_database
+from lib.commands.configure import cmd_configure, cmd_configure_add_database, cmd_configure_list_database, cmd_configure_remove_database
 from lib.commands.version import cmd_version
 
 
@@ -43,6 +43,14 @@ def build_parser():
 
     configure_list_database = configure_list_subparsers.add_parser("database", help="list databases")
     configure_list_database.set_defaults(func=cmd_configure_list_database)
+
+    configure_remove = configure_subparsers.add_parser("remove", help="remove configuration")
+    configure_remove_subparsers = configure_remove.add_subparsers(dest="configure_remove_command", metavar="COMMAND")
+    configure_remove.set_defaults(func=lambda args: configure_remove.print_help())
+
+    configure_remove_database = configure_remove_subparsers.add_parser("database", help="remove a database")
+    configure_remove_database.add_argument("--name", required=True, help="connection name")
+    configure_remove_database.set_defaults(func=cmd_configure_remove_database)
 
     return parser
 

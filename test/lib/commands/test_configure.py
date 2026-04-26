@@ -4,7 +4,7 @@ import os
 import pytest
 import yaml
 
-from lib.commands.configure import cmd_configure, cmd_configure_add_database
+from lib.commands.configure import cmd_configure, cmd_configure_add_database, cmd_configure_list_database
 
 
 def test_cmd_configure_no_subcommand_prints_help(capsys):
@@ -61,6 +61,35 @@ def test_cmd_configure_add_database_prints_confirmation(tmp_path, monkeypatch, c
     monkeypatch.chdir(tmp_path)
     cmd_configure_add_database(_make_db_args(name="myconn"))
     assert "myconn" in capsys.readouterr().out
+
+
+def test_cmd_configure_list_database_empty(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_configure_list_database(argparse.Namespace())
+    assert "No databases configured" in capsys.readouterr().out
+
+
+def test_cmd_configure_list_database_shows_entries(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_configure_add_database(_make_db_args(name="prod", password="secret"))
+    cmd_configure_add_database(_make_db_args(name="staging", password="s3cr3t"))
+    capsys.readouterr()
+
+    cmd_configure_list_database(argparse.Namespace())
+    out = capsys.readouterr().out
+    assert "prod" in out
+    assert "staging" in out
+
+
+def test_cmd_configure_list_database_masks_password(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_configure_add_database(_make_db_args(name="db", password="supersecret"))
+    capsys.readouterr()
+
+    cmd_configure_list_database(argparse.Namespace())
+    out = capsys.readouterr().out
+    assert "supersecret" not in out
+    assert "********" in out
 
 
 def test_cmd_configure_add_database_duplicate_name(tmp_path, monkeypatch, capsys):

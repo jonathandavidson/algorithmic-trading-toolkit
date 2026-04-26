@@ -37,6 +37,19 @@ def cmd_configure_add_database(args):
     print(f"Database '{args.name}' added.")
 
 
+def cmd_configure_list_database(args):
+    databases = _load_config().get("databases", [])
+    if not databases:
+        print("No databases configured.")
+        return
+    for db in databases:
+        print(
+            f"name={db['name']}  type={db['type']}  host={db['host']}  "
+            f"port={db['port']}  dbname={db['dbname']}  "
+            f"username={db['username']}  password=********"
+        )
+
+
 def cmd_configure(args):
     if not hasattr(args, "configure_command") or args.configure_command is None:
         args.configure_parser.print_help()

@@ -3,7 +3,7 @@ import argparse
 import sys
 
 from lib.commands.collect import cmd_collect
-from lib.commands.configure import cmd_configure, cmd_configure_add_database
+from lib.commands.configure import cmd_configure, cmd_configure_add_database, cmd_configure_list_database
 from lib.commands.version import cmd_version
 
 
@@ -36,6 +36,13 @@ def build_parser():
     configure_add_database.add_argument("--port", type=int, required=True, help="database port")
     configure_add_database.add_argument("--dbname", required=True, help="database name")
     configure_add_database.set_defaults(func=cmd_configure_add_database)
+
+    configure_list = configure_subparsers.add_parser("list", help="list configuration")
+    configure_list_subparsers = configure_list.add_subparsers(dest="configure_list_command", metavar="COMMAND")
+    configure_list.set_defaults(func=lambda args: configure_list.print_help())
+
+    configure_list_database = configure_list_subparsers.add_parser("database", help="list databases")
+    configure_list_database.set_defaults(func=cmd_configure_list_database)
 
     return parser
 

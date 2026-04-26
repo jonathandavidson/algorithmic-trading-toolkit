@@ -23,6 +23,12 @@ python cli.py <command>
 python cli.py collect
 ```
 
+**configure** — configure the tool
+
+```bash
+python cli.py configure
+```
+
 **version** — show the current version
 
 ```bash

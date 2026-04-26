@@ -3,6 +3,7 @@ import argparse
 import sys
 
 from lib.commands.collect import cmd_collect
+from lib.commands.configure import cmd_configure
 from lib.commands.version import cmd_version
 
 
@@ -17,6 +18,9 @@ def build_parser():
 
     collect = subparsers.add_parser("collect", help="collect historical data")
     collect.set_defaults(func=cmd_collect)
+
+    configure = subparsers.add_parser("configure", help="configure the tool")
+    configure.set_defaults(func=cmd_configure)
 
     return parser
 

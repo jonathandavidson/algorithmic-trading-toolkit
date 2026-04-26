@@ -27,6 +27,7 @@ python cli.py collect
 
 ```bash
 python cli.py configure
+python cli.py configure add database
 ```
 
 **version** — show the current version

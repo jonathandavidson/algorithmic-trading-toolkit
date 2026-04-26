@@ -3,7 +3,7 @@ import argparse
 import sys
 
 from lib.commands.collect import cmd_collect
-from lib.commands.configure import cmd_configure
+from lib.commands.configure import cmd_configure, cmd_configure_add_database
 from lib.commands.version import cmd_version
 
 
@@ -20,7 +20,15 @@ def build_parser():
     collect.set_defaults(func=cmd_collect)
 
     configure = subparsers.add_parser("configure", help="configure the tool")
-    configure.set_defaults(func=cmd_configure)
+    configure.set_defaults(func=cmd_configure, configure_parser=configure)
+    configure_subparsers = configure.add_subparsers(dest="configure_command", metavar="COMMAND")
+
+    configure_add = configure_subparsers.add_parser("add", help="add configuration")
+    configure_add_subparsers = configure_add.add_subparsers(dest="configure_add_command", metavar="COMMAND")
+    configure_add.set_defaults(func=lambda args: configure_add.print_help())
+
+    configure_add_database = configure_add_subparsers.add_parser("database", help="add a database")
+    configure_add_database.set_defaults(func=cmd_configure_add_database)
 
     return parser
 

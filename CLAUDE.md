@@ -2,18 +2,30 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Virtual environment
+
+Always run `python`, `pip`, and `pytest` from the project virtual environment:
+
+```bash
+.venv/bin/python
+.venv/bin/pip
+.venv/bin/pytest
+```
+
+Never use bare `python`, `pip`, or `pytest` commands — they will resolve to the system interpreter and may not have the project dependencies installed.
+
 ## Running the CLI
 
 ```bash
-python cli.py <command>
-python cli.py --help
+.venv/bin/python cli.py <command>
+.venv/bin/python cli.py --help
 ```
 
 ## Running tests
 
 ```bash
-pytest                        # all tests with coverage report
-pytest test/test_cli.py       # single file
+.venv/bin/pytest                        # all tests with coverage report
+.venv/bin/pytest test/test_cli.py       # single file
 ```
 
 Coverage runs automatically via `setup.cfg` and reports missing lines.

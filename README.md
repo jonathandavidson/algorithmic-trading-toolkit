@@ -24,6 +24,12 @@ pip install -e .
 
 This installs the `hdc` command into the virtual environment.
 
+### Install test dependencies
+
+```bash
+pip install -r test/requirements.txt
+```
+
 ## Usage
 
 ```bash

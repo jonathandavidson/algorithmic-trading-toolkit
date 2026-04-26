@@ -23,6 +23,14 @@ Never use bare `python`, `pip`, or `pytest` commands — they will resolve to th
 
 ## Running tests
 
+Install test dependencies first (one-time setup):
+
+```bash
+.venv/bin/pip install -r test/requirements.txt
+```
+
+Then run tests:
+
 ```bash
 .venv/bin/pytest                        # all tests with coverage report
 .venv/bin/pytest test/test_cli.py       # single file

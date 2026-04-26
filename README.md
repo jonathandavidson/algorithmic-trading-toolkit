@@ -4,9 +4,17 @@ A command-line tool for collecting historical data.
 
 ## Setup
 
+### Create a virtual environment (recommended)
+
 ```bash
-python3 -m venv .venv
+python -m venv .venv
 source .venv/bin/activate
+```
+
+### Install Dependencies
+
+```bash
+pip install -r requirements.txt
 ```
 
 ## Usage

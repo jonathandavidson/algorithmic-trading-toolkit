@@ -1,10 +1,11 @@
 import argparse
 import os
+from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
 
-from lib.commands.configure import cmd_configure, cmd_configure_add_database, cmd_configure_list_database, cmd_configure_remove_database
+from lib.commands.configure import cmd_configure, cmd_configure_add_database, cmd_configure_list_database, cmd_configure_remove_database, cmd_configure_test_database
 
 
 def test_cmd_configure_no_subcommand_prints_help(capsys):
@@ -178,3 +179,49 @@ def test_cmd_configure_add_database_with_default_flag_transfers_default(tmp_path
     dbs = {db["name"]: db for db in config["databases"]}
     assert "default" not in dbs["first"]
     assert dbs["second"].get("default") is True
+
+
+def test_cmd_configure_test_database_no_default(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_configure_test_database(argparse.Namespace())
+    assert "No default database found" in capsys.readouterr().out
+
+
+def test_cmd_configure_test_database_success(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_configure_add_database(_make_db_args(name="mydb"))
+    capsys.readouterr()
+
+    mock_engine = MagicMock()
+    with patch("lib.commands.configure.sqlalchemy.create_engine", return_value=mock_engine):
+        cmd_configure_test_database(argparse.Namespace())
+
+    assert "successful" in capsys.readouterr().out
+
+
+def test_cmd_configure_test_database_failure(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_configure_add_database(_make_db_args(name="mydb"))
+    capsys.readouterr()
+
+    mock_engine = MagicMock()
+    mock_engine.connect.side_effect = Exception("connection refused")
+    with patch("lib.commands.configure.sqlalchemy.create_engine", return_value=mock_engine):
+        cmd_configure_test_database(argparse.Namespace())
+
+    out = capsys.readouterr().out
+    assert "failed" in out
+    assert "connection refused" in out
+
+
+def test_cmd_configure_test_database_postgres_alias(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_configure_add_database(_make_db_args(name="mydb", db_type="postgres"))
+    capsys.readouterr()
+
+    mock_engine = MagicMock()
+    with patch("lib.commands.configure.sqlalchemy.create_engine", return_value=mock_engine) as mock_create:
+        cmd_configure_test_database(argparse.Namespace())
+
+    url = mock_create.call_args[0][0]
+    assert url.drivername == "postgresql"

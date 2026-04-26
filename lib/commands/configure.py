@@ -1,5 +1,6 @@
 import os
 
+import sqlalchemy
 import yaml
 
 CONFIG_PATH = ".config/hdc.config.yaml"
@@ -72,6 +73,33 @@ def cmd_configure_remove_database(args):
     config["databases"] = [db for db in databases if db["name"] != args.name]
     _save_config(config)
     print(f"Database '{args.name}' removed.")
+
+
+_TYPE_ALIASES = {"postgres": "postgresql"}
+
+
+def cmd_configure_test_database(args):
+    databases = _load_config().get("databases", [])
+    default_db = next((db for db in databases if db.get("default")), None)
+    if default_db is None:
+        print("No default database found.")
+        return
+    dialect = _TYPE_ALIASES.get(default_db["type"], default_db["type"])
+    url = sqlalchemy.URL.create(
+        drivername=dialect,
+        username=default_db["username"],
+        password=default_db["password"],
+        host=default_db["host"],
+        port=default_db["port"],
+        database=default_db["dbname"],
+    )
+    try:
+        engine = sqlalchemy.create_engine(url)
+        with engine.connect():
+            pass
+        print(f"Connection to '{default_db['name']}' successful.")
+    except Exception as e:
+        print(f"Connection to '{default_db['name']}' failed: {e}")
 
 
 def cmd_configure(args):

@@ -53,6 +53,8 @@ hdc configure add database --name <name> --type <type> --username <user> \
 hdc configure list database
 
 hdc configure remove database --name <name>
+
+hdc configure test database
 ```
 
 **version** — show the current version

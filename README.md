@@ -6,8 +6,13 @@ A command-line tool for collecting historical data.
 
 ### Create a virtual environment (recommended)
 
+Create the virtual environment (first time setup)
 ```bash
 python -m venv .venv
+```
+
+Activate the virtual environment
+```bash
 source .venv/bin/activate
 ```
 

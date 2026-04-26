@@ -17,8 +17,8 @@ Never use bare `python`, `pip`, or `pytest` commands — they will resolve to th
 ## Running the CLI
 
 ```bash
-.venv/bin/python cli.py <command>
-.venv/bin/python cli.py --help
+.venv/bin/hdc <command>
+.venv/bin/hdc --help
 ```
 
 ## Running tests

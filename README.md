@@ -16,16 +16,18 @@ Activate the virtual environment
 source .venv/bin/activate
 ```
 
-### Install Dependencies
+### Install
 
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
+
+This installs the `hdc` command into the virtual environment.
 
 ## Usage
 
 ```bash
-python cli.py <command>
+hdc <command>
 ```
 
 ### Commands
@@ -33,25 +35,29 @@ python cli.py <command>
 **collect** — collect historical data
 
 ```bash
-python cli.py collect
+hdc collect
 ```
 
 **configure** — configure the tool
 
 ```bash
-python cli.py configure
-python cli.py configure add database
+hdc configure add database --name <name> --type <type> --username <user> \
+    --password <pass> --host <host> --port <port> --dbname <dbname>
+
+hdc configure list database
+
+hdc configure remove database --name <name>
 ```
 
 **version** — show the current version
 
 ```bash
-python cli.py --version
+hdc --version
 ```
 
 ## Help
 
 ```bash
-python cli.py --help
-python cli.py <command> --help
+hdc --help
+hdc <command> --help
 ```

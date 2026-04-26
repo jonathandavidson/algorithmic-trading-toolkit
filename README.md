@@ -48,7 +48,7 @@ hdc collect
 
 ```bash
 hdc configure add database --name <name> --type <type> --username <user> \
-    --password <pass> --host <host> --port <port> --dbname <dbname>
+    --password <pass> --host <host> --port <port> --dbname <dbname> [--default]
 
 hdc configure list database
 

@@ -25,6 +25,7 @@ def _make_db_args(**overrides):
         host="localhost",
         port=5432,
         dbname="mydb",
+        set_default=False,
     )
     defaults.update(overrides)
     return argparse.Namespace(**defaults)
@@ -81,6 +82,20 @@ def test_cmd_configure_list_database_shows_entries(tmp_path, monkeypatch, capsys
     assert "staging" in out
 
 
+def test_cmd_configure_list_database_shows_default(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_configure_add_database(_make_db_args(name="primary"))
+    cmd_configure_add_database(_make_db_args(name="secondary"))
+    capsys.readouterr()
+
+    cmd_configure_list_database(argparse.Namespace())
+    lines = capsys.readouterr().out.splitlines()
+    primary_line = next(l for l in lines if "primary" in l)
+    secondary_line = next(l for l in lines if "secondary" in l)
+    assert "default=true" in primary_line
+    assert "default=true" not in secondary_line
+
+
 def test_cmd_configure_list_database_masks_password(tmp_path, monkeypatch, capsys):
     monkeypatch.chdir(tmp_path)
     cmd_configure_add_database(_make_db_args(name="db", password="supersecret"))
@@ -132,3 +147,34 @@ def test_cmd_configure_remove_database_cancelled(tmp_path, monkeypatch, capsys):
 
     config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
     assert any(db["name"] == "keep" for db in config["databases"])
+
+
+def test_cmd_configure_add_database_first_is_default(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    cmd_configure_add_database(_make_db_args(name="first"))
+
+    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    db = config["databases"][0]
+    assert db.get("default") is True
+
+
+def test_cmd_configure_add_database_second_without_flag_not_default(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    cmd_configure_add_database(_make_db_args(name="first"))
+    cmd_configure_add_database(_make_db_args(name="second"))
+
+    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    dbs = {db["name"]: db for db in config["databases"]}
+    assert dbs["first"].get("default") is True
+    assert "default" not in dbs["second"]
+
+
+def test_cmd_configure_add_database_with_default_flag_transfers_default(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    cmd_configure_add_database(_make_db_args(name="first"))
+    cmd_configure_add_database(_make_db_args(name="second", set_default=True))
+
+    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    dbs = {db["name"]: db for db in config["databases"]}
+    assert "default" not in dbs["first"]
+    assert dbs["second"].get("default") is True

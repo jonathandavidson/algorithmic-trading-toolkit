@@ -35,6 +35,7 @@ def build_parser():
     configure_add_database.add_argument("--host", required=True, help="database host")
     configure_add_database.add_argument("--port", type=int, required=True, help="database port")
     configure_add_database.add_argument("--dbname", required=True, help="database name")
+    configure_add_database.add_argument("--default", dest="set_default", action="store_true", help="set as default database")
     configure_add_database.set_defaults(func=cmd_configure_add_database)
 
     configure_list = configure_subparsers.add_parser("list", help="list configuration")

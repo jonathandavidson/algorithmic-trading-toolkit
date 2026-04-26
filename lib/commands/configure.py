@@ -24,7 +24,12 @@ def cmd_configure_add_database(args):
     if any(db["name"] == args.name for db in databases):
         print(f"Database '{args.name}' already exists.")
         return
-    databases.append({
+    is_first = len(databases) == 0
+    make_default = is_first or args.set_default
+    if make_default:
+        for db in databases:
+            db.pop("default", None)
+    entry = {
         "name": args.name,
         "type": args.db_type,
         "username": args.username,
@@ -32,7 +37,10 @@ def cmd_configure_add_database(args):
         "host": args.host,
         "port": args.port,
         "dbname": args.dbname,
-    })
+    }
+    if make_default:
+        entry["default"] = True
+    databases.append(entry)
     _save_config(config)
     print(f"Database '{args.name}' added.")
 
@@ -43,10 +51,11 @@ def cmd_configure_list_database(args):
         print("No databases configured.")
         return
     for db in databases:
+        default_flag = "  default=true" if db.get("default") else ""
         print(
             f"name={db['name']}  type={db['type']}  host={db['host']}  "
             f"port={db['port']}  dbname={db['dbname']}  "
-            f"username={db['username']}  password=********"
+            f"username={db['username']}  password=********{default_flag}"
         )
 
 

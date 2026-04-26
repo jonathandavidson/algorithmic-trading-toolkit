@@ -12,9 +12,11 @@ python cli.py --help
 ## Running tests
 
 ```bash
-pytest                        # all tests
+pytest                        # all tests with coverage report
 pytest test/test_cli.py       # single file
 ```
+
+Coverage runs automatically via `setup.cfg` and reports missing lines.
 
 ## Architecture
 

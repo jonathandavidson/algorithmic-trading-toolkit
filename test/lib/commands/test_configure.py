@@ -61,3 +61,15 @@ def test_cmd_configure_add_database_prints_confirmation(tmp_path, monkeypatch, c
     monkeypatch.chdir(tmp_path)
     cmd_configure_add_database(_make_db_args(name="myconn"))
     assert "myconn" in capsys.readouterr().out
+
+
+def test_cmd_configure_add_database_duplicate_name(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_configure_add_database(_make_db_args(name="dup"))
+    capsys.readouterr()
+    cmd_configure_add_database(_make_db_args(name="dup"))
+    out = capsys.readouterr().out
+    assert "already exists" in out
+
+    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    assert len(config["databases"]) == 1

@@ -21,6 +21,9 @@ def _save_config(config):
 def cmd_configure_add_database(args):
     config = _load_config()
     databases = config.setdefault("databases", [])
+    if any(db["name"] == args.name for db in databases):
+        print(f"Database '{args.name}' already exists.")
+        return
     databases.append({
         "name": args.name,
         "type": args.db_type,

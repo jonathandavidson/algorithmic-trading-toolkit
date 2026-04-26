@@ -28,6 +28,13 @@ def build_parser():
     configure_add.set_defaults(func=lambda args: configure_add.print_help())
 
     configure_add_database = configure_add_subparsers.add_parser("database", help="add a database")
+    configure_add_database.add_argument("--name", required=True, help="connection name")
+    configure_add_database.add_argument("--type", dest="db_type", required=True, help="database type")
+    configure_add_database.add_argument("--username", required=True, help="database username")
+    configure_add_database.add_argument("--password", required=True, help="database password")
+    configure_add_database.add_argument("--host", required=True, help="database host")
+    configure_add_database.add_argument("--port", type=int, required=True, help="database port")
+    configure_add_database.add_argument("--dbname", required=True, help="database name")
     configure_add_database.set_defaults(func=cmd_configure_add_database)
 
     return parser

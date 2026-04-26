@@ -9,6 +9,13 @@ python cli.py <command>
 python cli.py --help
 ```
 
+## Running tests
+
+```bash
+pytest                        # all tests
+pytest test/test_cli.py       # single file
+```
+
 ## Architecture
 
 `cli.py` is the single entrypoint. It uses Python's `argparse` with subparsers — each subcommand has a dedicated `cmd_<name>` handler function and is registered in `build_parser()`. `main()` dispatches to the handler via `args.func(args)`.

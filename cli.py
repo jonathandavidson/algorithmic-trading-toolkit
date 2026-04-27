@@ -1,10 +1,19 @@
 #!/usr/bin/env python3
 import argparse
 import sys
+from datetime import datetime
 
 from lib.commands.collect import cmd_collect
-from lib.commands.configure import cmd_configure, cmd_configure_add_database, cmd_configure_list_database, cmd_configure_remove_database, cmd_configure_test_database
+from lib.commands.configure import cmd_configure, cmd_configure_add_collection, cmd_configure_add_database, cmd_configure_init_collection, cmd_configure_list_collection, cmd_configure_list_database, cmd_configure_remove_collection, cmd_configure_remove_database, cmd_configure_test_database
 from lib.commands.version import cmd_version
+
+
+def _iso8601(value):
+    try:
+        datetime.fromisoformat(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"invalid ISO 8601 datetime: {value!r}")
+    return value
 
 
 def build_parser():
@@ -38,12 +47,24 @@ def build_parser():
     configure_add_database.add_argument("--default", dest="set_default", action="store_true", help="set as default database")
     configure_add_database.set_defaults(func=cmd_configure_add_database)
 
+    configure_add_collection = configure_add_subparsers.add_parser("collection", help="add a collection")
+    configure_add_collection.add_argument("--name", required=True, help="collection name")
+    configure_add_collection.add_argument("--database", required=True, help="database name")
+    configure_add_collection.add_argument("--type", required=True, choices=["historical-bars"], help="collection type")
+    configure_add_collection.add_argument("--frequency", choices=["1m", "1d"], help="data frequency")
+    configure_add_collection.add_argument("--start", required=True, type=_iso8601, help="start datetime (ISO 8601)")
+    configure_add_collection.add_argument("--end", type=_iso8601, help="end datetime (ISO 8601)")
+    configure_add_collection.set_defaults(func=cmd_configure_add_collection)
+
     configure_list = configure_subparsers.add_parser("list", help="list configuration")
     configure_list_subparsers = configure_list.add_subparsers(dest="configure_list_command", metavar="COMMAND")
     configure_list.set_defaults(func=lambda args: configure_list.print_help())
 
     configure_list_database = configure_list_subparsers.add_parser("database", help="list databases")
     configure_list_database.set_defaults(func=cmd_configure_list_database)
+
+    configure_list_collection = configure_list_subparsers.add_parser("collection", help="list collections")
+    configure_list_collection.set_defaults(func=cmd_configure_list_collection)
 
     configure_remove = configure_subparsers.add_parser("remove", help="remove configuration")
     configure_remove_subparsers = configure_remove.add_subparsers(dest="configure_remove_command", metavar="COMMAND")
@@ -53,12 +74,24 @@ def build_parser():
     configure_remove_database.add_argument("--name", required=True, help="connection name")
     configure_remove_database.set_defaults(func=cmd_configure_remove_database)
 
+    configure_remove_collection = configure_remove_subparsers.add_parser("collection", help="remove a collection")
+    configure_remove_collection.add_argument("--name", required=True, help="collection name")
+    configure_remove_collection.set_defaults(func=cmd_configure_remove_collection)
+
     configure_test = configure_subparsers.add_parser("test", help="test configuration")
     configure_test_subparsers = configure_test.add_subparsers(dest="configure_test_command", metavar="COMMAND")
     configure_test.set_defaults(func=lambda args: configure_test.print_help())
 
     configure_test_database = configure_test_subparsers.add_parser("database", help="test database connection")
     configure_test_database.set_defaults(func=cmd_configure_test_database)
+
+    configure_init = configure_subparsers.add_parser("init", help="initialize configuration")
+    configure_init_subparsers = configure_init.add_subparsers(dest="configure_init_command", metavar="COMMAND")
+    configure_init.set_defaults(func=lambda args: configure_init.print_help())
+
+    configure_init_collection = configure_init_subparsers.add_parser("collection", help="initialize a collection")
+    configure_init_collection.add_argument("--name", required=True, help="collection name")
+    configure_init_collection.set_defaults(func=cmd_configure_init_collection)
 
     return parser
 

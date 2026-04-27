@@ -2,6 +2,68 @@ from lib.config import load_config, save_config
 from lib.database import connect
 
 
+def cmd_configure_add_collection(args):
+    config = load_config()
+    collections = config.setdefault("collections", [])
+    if any(c["name"] == args.name for c in collections):
+        print(f"Collection '{args.name}' already exists.")
+        return
+    entry = {
+        "name": args.name,
+        "database": args.database,
+        "type": args.type,
+        "start": args.start,
+    }
+    if args.frequency is not None:
+        entry["frequency"] = args.frequency
+    if args.end is not None:
+        entry["end"] = args.end
+    collections.append(entry)
+    save_config(config)
+    print(f"Collection '{args.name}' added.")
+
+
+def cmd_configure_init_collection(args):
+    collections = load_config().get("collections", [])
+    if not any(c["name"] == args.name for c in collections):
+        print(f"Collection '{args.name}' not found.")
+        return
+
+
+def cmd_configure_list_collection(args):
+    collections = load_config().get("collections", [])
+    if not collections:
+        print("No collections configured.")
+        return
+    for c in collections:
+        parts = [
+            f"name={c['name']}",
+            f"database={c['database']}",
+            f"type={c['type']}",
+            f"start={c['start']}",
+        ]
+        if "frequency" in c:
+            parts.append(f"frequency={c['frequency']}")
+        if "end" in c:
+            parts.append(f"end={c['end']}")
+        print("  ".join(parts))
+
+
+def cmd_configure_remove_collection(args):
+    config = load_config()
+    collections = config.get("collections", [])
+    if not any(c["name"] == args.name for c in collections):
+        print(f"Collection '{args.name}' not found.")
+        return
+    answer = input(f"Remove collection '{args.name}'? [y/N] ")
+    if answer.strip().lower() != "y":
+        print("Cancelled.")
+        return
+    config["collections"] = [c for c in collections if c["name"] != args.name]
+    save_config(config)
+    print(f"Collection '{args.name}' removed.")
+
+
 def cmd_configure_add_database(args):
     config = load_config()
     databases = config.setdefault("databases", [])

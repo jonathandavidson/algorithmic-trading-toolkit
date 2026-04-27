@@ -50,9 +50,18 @@ hdc collect
 hdc configure add database --name <name> --type <type> --username <user> \
     --password <pass> --host <host> --port <port> --dbname <dbname> [--default]
 
+hdc configure add collection --name <name> --database <db> --type historical-bars \
+    --start <ISO8601> [--frequency 1m|1d] [--end <ISO8601>]
+
 hdc configure list database
 
+hdc configure list collection
+
 hdc configure remove database --name <name>
+
+hdc configure remove collection --name <name>
+
+hdc configure init collection --name <name>
 
 hdc configure test database
 ```

@@ -42,6 +42,10 @@ Coverage runs automatically via `setup.cfg` and reports missing lines.
 
 `cli.py` is the single entrypoint. It uses Python's `argparse` with subparsers — each subcommand has a dedicated `cmd_<name>` handler function and is registered in `build_parser()`. `main()` dispatches to the handler via `args.func(args)`.
 
+## Type hints
+
+Use type hints for all new Python code — function parameters, return types, and variables where the type is not immediately obvious.
+
 ## README maintenance
 
 Whenever the CLI interface changes (new subcommands, removed subcommands, changed flags or arguments), update `README.md` to reflect the new usage.

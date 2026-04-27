@@ -1,6 +1,5 @@
-import sqlalchemy
-
 from lib.config import load_config, save_config
+from lib.database import connect
 
 
 def cmd_configure_add_database(args):
@@ -59,27 +58,14 @@ def cmd_configure_remove_database(args):
     print(f"Database '{args.name}' removed.")
 
 
-_TYPE_ALIASES = {"postgres": "postgresql"}
-
-
 def cmd_configure_test_database(args):
     databases = load_config().get("databases", [])
     default_db = next((db for db in databases if db.get("default")), None)
     if default_db is None:
         print("No default database found.")
         return
-    dialect = _TYPE_ALIASES.get(default_db["type"], default_db["type"])
-    url = sqlalchemy.URL.create(
-        drivername=dialect,
-        username=default_db["username"],
-        password=default_db["password"],
-        host=default_db["host"],
-        port=default_db["port"],
-        database=default_db["dbname"],
-    )
     try:
-        engine = sqlalchemy.create_engine(url)
-        with engine.connect():
+        with connect(default_db):
             pass
         print(f"Connection to '{default_db['name']}' successful.")
     except Exception as e:

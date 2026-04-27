@@ -192,8 +192,7 @@ def test_cmd_configure_test_database_success(tmp_path, monkeypatch, capsys):
     cmd_configure_add_database(_make_db_args(name="mydb"))
     capsys.readouterr()
 
-    mock_engine = MagicMock()
-    with patch("lib.commands.configure.sqlalchemy.create_engine", return_value=mock_engine):
+    with patch("lib.database.sqlalchemy.create_engine", return_value=MagicMock()):
         cmd_configure_test_database(argparse.Namespace())
 
     assert "successful" in capsys.readouterr().out
@@ -206,7 +205,7 @@ def test_cmd_configure_test_database_failure(tmp_path, monkeypatch, capsys):
 
     mock_engine = MagicMock()
     mock_engine.connect.side_effect = Exception("connection refused")
-    with patch("lib.commands.configure.sqlalchemy.create_engine", return_value=mock_engine):
+    with patch("lib.database.sqlalchemy.create_engine", return_value=mock_engine):
         cmd_configure_test_database(argparse.Namespace())
 
     out = capsys.readouterr().out
@@ -219,8 +218,7 @@ def test_cmd_configure_test_database_postgres_alias(tmp_path, monkeypatch, capsy
     cmd_configure_add_database(_make_db_args(name="mydb", db_type="postgres"))
     capsys.readouterr()
 
-    mock_engine = MagicMock()
-    with patch("lib.commands.configure.sqlalchemy.create_engine", return_value=mock_engine) as mock_create:
+    with patch("lib.database.sqlalchemy.create_engine", return_value=MagicMock()) as mock_create:
         cmd_configure_test_database(argparse.Namespace())
 
     url = mock_create.call_args[0][0]

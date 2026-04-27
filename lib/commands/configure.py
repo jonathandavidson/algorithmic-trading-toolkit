@@ -1,26 +1,10 @@
-import os
-
 import sqlalchemy
-import yaml
 
-CONFIG_PATH = ".config/hdc.config.yaml"
-
-
-def _load_config():
-    if not os.path.exists(CONFIG_PATH):
-        return {}
-    with open(CONFIG_PATH) as f:
-        return yaml.safe_load(f) or {}
-
-
-def _save_config(config):
-    os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
-    with open(CONFIG_PATH, "w") as f:
-        yaml.dump(config, f, default_flow_style=False)
+from lib.config import load_config, save_config
 
 
 def cmd_configure_add_database(args):
-    config = _load_config()
+    config = load_config()
     databases = config.setdefault("databases", [])
     if any(db["name"] == args.name for db in databases):
         print(f"Database '{args.name}' already exists.")
@@ -42,12 +26,12 @@ def cmd_configure_add_database(args):
     if make_default:
         entry["default"] = True
     databases.append(entry)
-    _save_config(config)
+    save_config(config)
     print(f"Database '{args.name}' added.")
 
 
 def cmd_configure_list_database(args):
-    databases = _load_config().get("databases", [])
+    databases = load_config().get("databases", [])
     if not databases:
         print("No databases configured.")
         return
@@ -61,7 +45,7 @@ def cmd_configure_list_database(args):
 
 
 def cmd_configure_remove_database(args):
-    config = _load_config()
+    config = load_config()
     databases = config.get("databases", [])
     if not any(db["name"] == args.name for db in databases):
         print(f"Database '{args.name}' not found.")
@@ -71,7 +55,7 @@ def cmd_configure_remove_database(args):
         print("Cancelled.")
         return
     config["databases"] = [db for db in databases if db["name"] != args.name]
-    _save_config(config)
+    save_config(config)
     print(f"Database '{args.name}' removed.")
 
 
@@ -79,7 +63,7 @@ _TYPE_ALIASES = {"postgres": "postgresql"}
 
 
 def cmd_configure_test_database(args):
-    databases = _load_config().get("databases", [])
+    databases = load_config().get("databases", [])
     default_db = next((db for db in databases if db.get("default")), None)
     if default_db is None:
         print("No default database found.")

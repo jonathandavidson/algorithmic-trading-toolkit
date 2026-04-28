@@ -1,11 +1,12 @@
-import sqlalchemy
+from sqlalchemy import URL, create_engine
+from sqlalchemy.engine import Connection, Engine
 
 _TYPE_ALIASES = {"postgres": "postgresql"}
 
 
-def connect(db):
+def get_engine(db: dict) -> Engine:
     dialect = _TYPE_ALIASES.get(db["type"], db["type"])
-    url = sqlalchemy.URL.create(
+    url = URL.create(
         drivername=dialect,
         username=db["username"],
         password=db["password"],
@@ -13,5 +14,8 @@ def connect(db):
         port=db["port"],
         database=db["dbname"],
     )
-    engine = sqlalchemy.create_engine(url)
-    return engine.connect()
+    return create_engine(url)
+
+
+def connect(db: dict) -> Connection:
+    return get_engine(db).connect()

@@ -1,5 +1,7 @@
 from lib.config import load_config, save_config
-from lib.database import connect
+from lib.database import connect, get_engine
+from lib.models.base import Base
+import lib.models.historical_bars  # registers HistoricalBar with Base.metadata
 
 
 def cmd_configure_add_collection(args):
@@ -24,10 +26,26 @@ def cmd_configure_add_collection(args):
 
 
 def cmd_configure_init_collection(args):
-    collections = load_config().get("collections", [])
-    if not any(c["name"] == args.name for c in collections):
+    config = load_config()
+    collections = config.get("collections", [])
+    collection = next((c for c in collections if c["name"] == args.name), None)
+    if collection is None:
         print(f"Collection '{args.name}' not found.")
         return
+    databases = config.get("databases", [])
+    db = next((d for d in databases if d["name"] == collection["database"]), None)
+    if db is None:
+        print(f"Database '{collection['database']}' not found.")
+        return
+    answer = input(
+        f"Create tables in database '{db['name']}' ({db['host']}:{db['port']}/{db['dbname']})? [y/N] "
+    )
+    if answer.strip().lower() != "y":
+        print("Cancelled.")
+        return
+    engine = get_engine(db)
+    Base.metadata.create_all(engine)
+    print("Tables created.")
 
 
 def cmd_configure_list_collection(args):

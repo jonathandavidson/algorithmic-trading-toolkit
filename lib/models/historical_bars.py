@@ -1,5 +1,7 @@
-import sqlalchemy
-import sqlalchemy.orm
+from typing import Optional
+
+from sqlalchemy import BigInteger, DateTime, Numeric
+from sqlalchemy.orm import Mapped, mapped_column
 
 from lib.models.base import Base, CommonMixin
 
@@ -7,23 +9,11 @@ from lib.models.base import Base, CommonMixin
 class HistoricalBar(CommonMixin, Base):
     __tablename__ = "historical_bars"
 
-    time: sqlalchemy.orm.Mapped[sqlalchemy.DateTime] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.DateTime(timezone=True)
-    )
-    open: sqlalchemy.orm.Mapped[sqlalchemy.Numeric] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.Numeric
-    )
-    high: sqlalchemy.orm.Mapped[sqlalchemy.Numeric] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.Numeric
-    )
-    low: sqlalchemy.orm.Mapped[sqlalchemy.Numeric] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.Numeric
-    )
-    close: sqlalchemy.orm.Mapped[sqlalchemy.Numeric] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.Numeric
-    )
-    volume: sqlalchemy.orm.Mapped[int] = sqlalchemy.orm.mapped_column(sqlalchemy.BigInteger)
-    trade_count: sqlalchemy.orm.Mapped[int] = sqlalchemy.orm.mapped_column(sqlalchemy.BigInteger)
-    volume_weighted_avg_price: sqlalchemy.orm.Mapped[sqlalchemy.Numeric] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.Numeric
-    )
+    time: Mapped[DateTime] = mapped_column(DateTime(timezone=True))
+    open: Mapped[Numeric] = mapped_column(Numeric)
+    high: Mapped[Numeric] = mapped_column(Numeric)
+    low: Mapped[Numeric] = mapped_column(Numeric)
+    close: Mapped[Numeric] = mapped_column(Numeric)
+    volume: Mapped[Optional[int]] = mapped_column(BigInteger)
+    trade_count: Mapped[Optional[int]] = mapped_column(BigInteger)
+    volume_weighted_avg_price: Mapped[Optional[Numeric]] = mapped_column(Numeric)

@@ -46,6 +46,10 @@ Coverage runs automatically via `setup.cfg` and reports missing lines.
 
 Use type hints for all new Python code — function parameters, return types, and variables where the type is not immediately obvious.
 
+## Imports
+
+Import functions, classes, and other objects directly rather than referencing them through the module. Prefer `from x import Y` over `import x` and then using `x.Y`.
+
 ## README maintenance
 
 Whenever the CLI interface changes (new subcommands, removed subcommands, changed flags or arguments), update `README.md` to reflect the new usage.

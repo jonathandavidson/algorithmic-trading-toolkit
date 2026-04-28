@@ -1,18 +1,16 @@
+from typing import Optional
+
 import sqlalchemy
-import sqlalchemy.orm
+from sqlalchemy import BigInteger, DateTime, String
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class CommonMixin:
-    id: sqlalchemy.orm.Mapped[int] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.BigInteger, primary_key=True
-    )
-    created_time: sqlalchemy.orm.Mapped[sqlalchemy.DateTime] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.DateTime(timezone=True)
-    )
-    updated_time: sqlalchemy.orm.Mapped[sqlalchemy.DateTime] = sqlalchemy.orm.mapped_column(
-        sqlalchemy.DateTime(timezone=True)
-    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True))
+    collection_name: Mapped[Optional[str]] = mapped_column(String)
 
 
-class Base(sqlalchemy.orm.DeclarativeBase):
+class Base(DeclarativeBase):
     pass

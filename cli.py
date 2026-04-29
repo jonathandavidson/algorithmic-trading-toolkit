@@ -3,8 +3,8 @@ import argparse
 import sys
 from datetime import datetime
 
-from lib.commands.collect import cmd_collect
 from lib.commands.configure import cmd_configure, cmd_configure_add_collection, cmd_configure_add_database, cmd_configure_init_collection, cmd_configure_list_collection, cmd_configure_list_database, cmd_configure_remove_collection, cmd_configure_remove_database, cmd_configure_test_database
+from lib.commands.run import cmd_run, cmd_run_collection
 from lib.commands.version import cmd_version
 
 
@@ -25,8 +25,13 @@ def build_parser():
     subparsers = parser.add_subparsers(dest="command", metavar="COMMAND")
     subparsers.required = False
 
-    collect = subparsers.add_parser("collect", help="collect historical data")
-    collect.set_defaults(func=cmd_collect)
+    run = subparsers.add_parser("run", help="run a collection")
+    run.set_defaults(func=cmd_run, run_parser=run)
+    run_subparsers = run.add_subparsers(dest="run_command", metavar="COMMAND")
+
+    run_collection = run_subparsers.add_parser("collection", help="run a collection")
+    run_collection.add_argument("--name", required=True, help="collection name")
+    run_collection.set_defaults(func=cmd_run_collection)
 
     configure = subparsers.add_parser("configure", help="configure the tool")
     configure.set_defaults(func=cmd_configure, configure_parser=configure)

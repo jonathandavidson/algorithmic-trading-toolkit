@@ -38,10 +38,10 @@ hdc <command>
 
 ### Commands
 
-**collect** — collect historical data
+**run** — run a collection
 
 ```bash
-hdc collect
+hdc run collection --name <name>
 ```
 
 **configure** — configure the tool

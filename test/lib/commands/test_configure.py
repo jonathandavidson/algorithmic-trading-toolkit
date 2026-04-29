@@ -192,7 +192,7 @@ def test_cmd_configure_test_database_success(tmp_path, monkeypatch, capsys):
     cmd_configure_add_database(_make_db_args(name="mydb"))
     capsys.readouterr()
 
-    with patch("lib.database.sqlalchemy.create_engine", return_value=MagicMock()):
+    with patch("lib.database.create_engine", return_value=MagicMock()):
         cmd_configure_test_database(argparse.Namespace())
 
     assert "successful" in capsys.readouterr().out
@@ -205,7 +205,7 @@ def test_cmd_configure_test_database_failure(tmp_path, monkeypatch, capsys):
 
     mock_engine = MagicMock()
     mock_engine.connect.side_effect = Exception("connection refused")
-    with patch("lib.database.sqlalchemy.create_engine", return_value=mock_engine):
+    with patch("lib.database.create_engine", return_value=mock_engine):
         cmd_configure_test_database(argparse.Namespace())
 
     out = capsys.readouterr().out
@@ -307,9 +307,13 @@ def test_cmd_configure_init_collection_not_found(tmp_path, monkeypatch, capsys):
 
 def test_cmd_configure_init_collection_found_produces_no_error(tmp_path, monkeypatch, capsys):
     monkeypatch.chdir(tmp_path)
-    cmd_configure_add_collection(_make_collection_args(name="bars"))
+    cmd_configure_add_database(_make_db_args(name="local"))
+    cmd_configure_add_collection(_make_collection_args(name="bars", database="local"))
     capsys.readouterr()
-    cmd_configure_init_collection(argparse.Namespace(name="bars"))
+    monkeypatch.setattr("builtins.input", lambda _: "y")
+    with patch("lib.database.create_engine", return_value=MagicMock()):
+        with patch("lib.models.base.Base.metadata") as mock_meta:
+            cmd_configure_init_collection(argparse.Namespace(name="bars"))
     assert "not found" not in capsys.readouterr().out
 
 
@@ -415,7 +419,7 @@ def test_cmd_configure_test_database_postgres_alias(tmp_path, monkeypatch, capsy
     cmd_configure_add_database(_make_db_args(name="mydb", db_type="postgres"))
     capsys.readouterr()
 
-    with patch("lib.database.sqlalchemy.create_engine", return_value=MagicMock()) as mock_create:
+    with patch("lib.database.create_engine", return_value=MagicMock()) as mock_create:
         cmd_configure_test_database(argparse.Namespace())
 
     url = mock_create.call_args[0][0]

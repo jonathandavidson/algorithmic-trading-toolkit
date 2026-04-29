@@ -38,12 +38,14 @@ def cmd_configure_init_collection(args):
         print(f"Database '{collection['database']}' not found.")
         return
     answer = input(
-        f"Create tables in database '{db['name']}' ({db['host']}:{db['port']}/{db['dbname']})? [y/N] "
+        f"Create tables in database '{db['name']}' ({db['host']}:{db['port']}/{db['dbname']})? "
+        f"Any existing tables will be dropped and recreated — back up data to avoid losing it. [y/N] "
     )
     if answer.strip().lower() != "y":
         print("Cancelled.")
         return
     engine = get_engine(db)
+    Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
     print("Tables created.")
 

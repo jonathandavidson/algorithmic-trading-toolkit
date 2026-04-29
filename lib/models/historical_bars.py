@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy import BigInteger, DateTime, Numeric
+from sqlalchemy import BigInteger, DateTime, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from lib.models.base import Base, CommonMixin
@@ -9,6 +9,7 @@ from lib.models.base import Base, CommonMixin
 class HistoricalBar(CommonMixin, Base):
     __tablename__ = "historical_bars"
 
+    symbol: Mapped[str] = mapped_column(String)
     time: Mapped[DateTime] = mapped_column(DateTime(timezone=True))
     open: Mapped[Numeric] = mapped_column(Numeric(12, 4))
     high: Mapped[Numeric] = mapped_column(Numeric(12, 4))

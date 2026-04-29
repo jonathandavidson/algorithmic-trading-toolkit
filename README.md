@@ -44,12 +44,16 @@ hdc <command>
 hdc run collection --name <name>
 ```
 
+**add** — add resources
+
+```bash
+hdc add database --name <name> --type <type> --username <user> \
+    --password <pass> --host <host> --port <port> --dbname <dbname>
+```
+
 **configure** — configure the tool
 
 ```bash
-hdc configure add database --name <name> --type <type> --username <user> \
-    --password <pass> --host <host> --port <port> --dbname <dbname> [--default]
-
 hdc configure add collection --name <name> --database <db> --type historical-bars \
     --start <ISO8601> [--frequency 1m|1d] [--end <ISO8601>]
 
@@ -63,7 +67,7 @@ hdc configure remove collection --name <name>
 
 hdc configure init collection --name <name>
 
-hdc configure test database
+hdc configure test database --name <name>
 ```
 
 **version** — show the current version

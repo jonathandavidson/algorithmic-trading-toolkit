@@ -26,7 +26,6 @@ def _make_db_args(**overrides):
         host="localhost",
         port=5432,
         dbname="mydb",
-        set_default=False,
     )
     defaults.update(overrides)
     return argparse.Namespace(**defaults)
@@ -170,21 +169,11 @@ def test_cmd_configure_add_database_second_without_flag_not_default(tmp_path, mo
     assert "default" not in dbs["second"]
 
 
-def test_cmd_configure_add_database_with_default_flag_transfers_default(tmp_path, monkeypatch):
+
+def test_cmd_configure_test_database_not_found(tmp_path, monkeypatch, capsys):
     monkeypatch.chdir(tmp_path)
-    cmd_configure_add_database(_make_db_args(name="first"))
-    cmd_configure_add_database(_make_db_args(name="second", set_default=True))
-
-    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
-    dbs = {db["name"]: db for db in config["databases"]}
-    assert "default" not in dbs["first"]
-    assert dbs["second"].get("default") is True
-
-
-def test_cmd_configure_test_database_no_default(tmp_path, monkeypatch, capsys):
-    monkeypatch.chdir(tmp_path)
-    cmd_configure_test_database(argparse.Namespace())
-    assert "No default database found" in capsys.readouterr().out
+    cmd_configure_test_database(argparse.Namespace(name="missing"))
+    assert "not found" in capsys.readouterr().out
 
 
 def test_cmd_configure_test_database_success(tmp_path, monkeypatch, capsys):
@@ -193,7 +182,7 @@ def test_cmd_configure_test_database_success(tmp_path, monkeypatch, capsys):
     capsys.readouterr()
 
     with patch("lib.database.create_engine", return_value=MagicMock()):
-        cmd_configure_test_database(argparse.Namespace())
+        cmd_configure_test_database(argparse.Namespace(name="mydb"))
 
     assert "successful" in capsys.readouterr().out
 
@@ -206,7 +195,7 @@ def test_cmd_configure_test_database_failure(tmp_path, monkeypatch, capsys):
     mock_engine = MagicMock()
     mock_engine.connect.side_effect = Exception("connection refused")
     with patch("lib.database.create_engine", return_value=mock_engine):
-        cmd_configure_test_database(argparse.Namespace())
+        cmd_configure_test_database(argparse.Namespace(name="mydb"))
 
     out = capsys.readouterr().out
     assert "failed" in out
@@ -420,7 +409,7 @@ def test_cmd_configure_test_database_postgres_alias(tmp_path, monkeypatch, capsy
     capsys.readouterr()
 
     with patch("lib.database.create_engine", return_value=MagicMock()) as mock_create:
-        cmd_configure_test_database(argparse.Namespace())
+        cmd_configure_test_database(argparse.Namespace(name="mydb"))
 
     url = mock_create.call_args[0][0]
     assert url.drivername == "postgresql"

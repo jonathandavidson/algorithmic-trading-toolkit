@@ -91,8 +91,7 @@ def cmd_configure_add_database(args):
         print(f"Database '{args.name}' already exists.")
         return
     is_first = len(databases) == 0
-    make_default = is_first or args.set_default
-    if make_default:
+    if is_first:
         for db in databases:
             db.pop("default", None)
     entry = {
@@ -104,7 +103,7 @@ def cmd_configure_add_database(args):
         "port": args.port,
         "dbname": args.dbname,
     }
-    if make_default:
+    if is_first:
         entry["default"] = True
     databases.append(entry)
     save_config(config)
@@ -142,16 +141,16 @@ def cmd_configure_remove_database(args):
 
 def cmd_configure_test_database(args):
     databases = load_config().get("databases", [])
-    default_db = next((db for db in databases if db.get("default")), None)
-    if default_db is None:
-        print("No default database found.")
+    db = next((d for d in databases if d["name"] == args.name), None)
+    if db is None:
+        print(f"Database '{args.name}' not found.")
         return
     try:
-        with connect(default_db):
+        with connect(db):
             pass
-        print(f"Connection to '{default_db['name']}' successful.")
+        print(f"Connection to '{db['name']}' successful.")
     except Exception as e:
-        print(f"Connection to '{default_db['name']}' failed: {e}")
+        print(f"Connection to '{db['name']}' failed: {e}")
 
 
 def cmd_configure(args):

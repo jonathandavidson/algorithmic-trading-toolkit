@@ -25,6 +25,20 @@ def build_parser():
     subparsers = parser.add_subparsers(dest="command", metavar="COMMAND")
     subparsers.required = False
 
+    add = subparsers.add_parser("add", help="add resources")
+    add.set_defaults(func=lambda args: add.print_help())
+    add_subparsers = add.add_subparsers(dest="add_command", metavar="COMMAND")
+
+    add_database = add_subparsers.add_parser("database", help="add a database")
+    add_database.add_argument("--name", required=True, help="connection name")
+    add_database.add_argument("--type", dest="db_type", required=True, help="database type")
+    add_database.add_argument("--username", required=True, help="database username")
+    add_database.add_argument("--password", required=True, help="database password")
+    add_database.add_argument("--host", required=True, help="database host")
+    add_database.add_argument("--port", type=int, required=True, help="database port")
+    add_database.add_argument("--dbname", required=True, help="database name")
+    add_database.set_defaults(func=cmd_configure_add_database)
+
     run = subparsers.add_parser("run", help="run a collection")
     run.set_defaults(func=cmd_run, run_parser=run)
     run_subparsers = run.add_subparsers(dest="run_command", metavar="COMMAND")
@@ -40,17 +54,6 @@ def build_parser():
     configure_add = configure_subparsers.add_parser("add", help="add configuration")
     configure_add_subparsers = configure_add.add_subparsers(dest="configure_add_command", metavar="COMMAND")
     configure_add.set_defaults(func=lambda args: configure_add.print_help())
-
-    configure_add_database = configure_add_subparsers.add_parser("database", help="add a database")
-    configure_add_database.add_argument("--name", required=True, help="connection name")
-    configure_add_database.add_argument("--type", dest="db_type", required=True, help="database type")
-    configure_add_database.add_argument("--username", required=True, help="database username")
-    configure_add_database.add_argument("--password", required=True, help="database password")
-    configure_add_database.add_argument("--host", required=True, help="database host")
-    configure_add_database.add_argument("--port", type=int, required=True, help="database port")
-    configure_add_database.add_argument("--dbname", required=True, help="database name")
-    configure_add_database.add_argument("--default", dest="set_default", action="store_true", help="set as default database")
-    configure_add_database.set_defaults(func=cmd_configure_add_database)
 
     configure_add_collection = configure_add_subparsers.add_parser("collection", help="add a collection")
     configure_add_collection.add_argument("--name", required=True, help="collection name")
@@ -88,6 +91,7 @@ def build_parser():
     configure_test.set_defaults(func=lambda args: configure_test.print_help())
 
     configure_test_database = configure_test_subparsers.add_parser("database", help="test database connection")
+    configure_test_database.add_argument("--name", required=True, help="database name")
     configure_test_database.set_defaults(func=cmd_configure_test_database)
 
     configure_init = configure_subparsers.add_parser("init", help="initialize configuration")

@@ -1,34 +1,26 @@
 from argparse import Namespace
 
-from lib.config import load_config, save_config
-from lib.database import connect
+import lib.services.database as database_service
 
 
 def cmd_database_add(args: Namespace) -> None:
-    config = load_config()
-    databases = config.setdefault("databases", [])
-    if any(db["name"] == args.name for db in databases):
-        print(f"Database '{args.name}' already exists.")
-        return
-    is_first = len(databases) == 0
-    entry = {
-        "name": args.name,
-        "type": args.db_type,
-        "username": args.username,
-        "password": args.password,
-        "host": args.host,
-        "port": args.port,
-        "dbname": args.dbname,
-    }
-    if is_first:
-        entry["default"] = True
-    databases.append(entry)
-    save_config(config)
-    print(f"Database '{args.name}' added.")
+    try:
+        database_service.add(
+            name=args.name,
+            db_type=args.db_type,
+            username=args.username,
+            password=args.password,
+            host=args.host,
+            port=args.port,
+            dbname=args.dbname,
+        )
+        print(f"Database '{args.name}' added.")
+    except ValueError as e:
+        print(e)
 
 
 def cmd_database_list(args: Namespace) -> None:
-    databases = load_config().get("databases", [])
+    databases = database_service.list()
     if not databases:
         print("No databases configured.")
         return
@@ -42,32 +34,25 @@ def cmd_database_list(args: Namespace) -> None:
 
 
 def cmd_database_remove(args: Namespace) -> None:
-    config = load_config()
-    databases = config.get("databases", [])
-    if not any(db["name"] == args.name for db in databases):
+    if not any(db["name"] == args.name for db in database_service.list()):
         print(f"Database '{args.name}' not found.")
         return
     answer = input(f"Remove database '{args.name}'? [y/N] ")
     if answer.strip().lower() != "y":
         print("Cancelled.")
         return
-    config["databases"] = [db for db in databases if db["name"] != args.name]
-    save_config(config)
+    database_service.remove(args.name)
     print(f"Database '{args.name}' removed.")
 
 
 def cmd_database_test(args: Namespace) -> None:
-    databases = load_config().get("databases", [])
-    db = next((d for d in databases if d["name"] == args.name), None)
-    if db is None:
-        print(f"Database '{args.name}' not found.")
-        return
     try:
-        with connect(db):
-            pass
-        print(f"Connection to '{db['name']}' successful.")
+        database_service.test(args.name)
+        print(f"Connection to '{args.name}' successful.")
+    except KeyError:
+        print(f"Database '{args.name}' not found.")
     except Exception as e:
-        print(f"Connection to '{db['name']}' failed: {e}")
+        print(f"Connection to '{args.name}' failed: {e}")
 
 
 def cmd_database(args: Namespace) -> None:

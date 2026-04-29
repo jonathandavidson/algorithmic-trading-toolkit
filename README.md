@@ -38,12 +38,6 @@ hdc <command>
 
 ### Commands
 
-**run** — run a collection
-
-```bash
-hdc run collection --name <name>
-```
-
 **database** — manage databases
 
 ```bash
@@ -57,17 +51,19 @@ hdc database remove --name <name>
 hdc database test --name <name>
 ```
 
-**configure** — configure the tool
+**collection** — manage collections
 
 ```bash
-hdc configure add collection --name <name> --database <db> --type historical-bars \
+hdc collection add --name <name> --database <db> --type historical-bars \
     --start <ISO8601> [--frequency 1m|1d] [--end <ISO8601>]
 
-hdc configure list collection
+hdc collection list
 
-hdc configure remove collection --name <name>
+hdc collection remove --name <name>
 
-hdc configure init collection --name <name>
+hdc collection init --name <name>
+
+hdc collection run --name <name>
 ```
 
 **version** — show the current version

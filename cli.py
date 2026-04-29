@@ -3,9 +3,8 @@ import argparse
 import sys
 from datetime import datetime
 
-from lib.commands.configure import cmd_configure, cmd_configure_add_collection, cmd_configure_init_collection, cmd_configure_list_collection, cmd_configure_remove_collection
+from lib.commands.collection import cmd_collection, cmd_collection_add, cmd_collection_init, cmd_collection_list, cmd_collection_remove, cmd_collection_run
 from lib.commands.database import cmd_database, cmd_database_add, cmd_database_list, cmd_database_remove, cmd_database_test
-from lib.commands.run import cmd_run, cmd_run_collection
 from lib.commands.version import cmd_version
 
 
@@ -51,53 +50,33 @@ def build_parser():
     database_test.add_argument("--name", required=True, help="database name")
     database_test.set_defaults(func=cmd_database_test)
 
-    run = subparsers.add_parser("run", help="run a collection")
-    run.set_defaults(func=cmd_run, run_parser=run)
-    run_subparsers = run.add_subparsers(dest="run_command", metavar="COMMAND")
+    collection = subparsers.add_parser("collection", help="manage collections")
+    collection.set_defaults(func=cmd_collection, collection_parser=collection)
+    collection_subparsers = collection.add_subparsers(dest="collection_command", metavar="COMMAND")
 
-    run_collection = run_subparsers.add_parser("collection", help="run a collection")
-    run_collection.add_argument("--name", required=True, help="collection name")
-    run_collection.set_defaults(func=cmd_run_collection)
+    collection_add = collection_subparsers.add_parser("add", help="add a collection")
+    collection_add.add_argument("--name", required=True, help="collection name")
+    collection_add.add_argument("--database", required=True, help="database name")
+    collection_add.add_argument("--type", required=True, choices=["historical-bars"], help="collection type")
+    collection_add.add_argument("--frequency", choices=["1m", "1d"], help="data frequency")
+    collection_add.add_argument("--start", required=True, type=_iso8601, help="start datetime (ISO 8601)")
+    collection_add.add_argument("--end", type=_iso8601, help="end datetime (ISO 8601)")
+    collection_add.set_defaults(func=cmd_collection_add)
 
-    configure = subparsers.add_parser("configure", help="configure the tool")
-    configure.set_defaults(func=cmd_configure, configure_parser=configure)
-    configure_subparsers = configure.add_subparsers(dest="configure_command", metavar="COMMAND")
+    collection_list = collection_subparsers.add_parser("list", help="list collections")
+    collection_list.set_defaults(func=cmd_collection_list)
 
-    configure_add = configure_subparsers.add_parser("add", help="add configuration")
-    configure_add_subparsers = configure_add.add_subparsers(dest="configure_add_command", metavar="COMMAND")
-    configure_add.set_defaults(func=lambda args: configure_add.print_help())
+    collection_remove = collection_subparsers.add_parser("remove", help="remove a collection")
+    collection_remove.add_argument("--name", required=True, help="collection name")
+    collection_remove.set_defaults(func=cmd_collection_remove)
 
-    configure_add_collection = configure_add_subparsers.add_parser("collection", help="add a collection")
-    configure_add_collection.add_argument("--name", required=True, help="collection name")
-    configure_add_collection.add_argument("--database", required=True, help="database name")
-    configure_add_collection.add_argument("--type", required=True, choices=["historical-bars"], help="collection type")
-    configure_add_collection.add_argument("--frequency", choices=["1m", "1d"], help="data frequency")
-    configure_add_collection.add_argument("--start", required=True, type=_iso8601, help="start datetime (ISO 8601)")
-    configure_add_collection.add_argument("--end", type=_iso8601, help="end datetime (ISO 8601)")
-    configure_add_collection.set_defaults(func=cmd_configure_add_collection)
+    collection_init = collection_subparsers.add_parser("init", help="initialize a collection")
+    collection_init.add_argument("--name", required=True, help="collection name")
+    collection_init.set_defaults(func=cmd_collection_init)
 
-    configure_list = configure_subparsers.add_parser("list", help="list configuration")
-    configure_list_subparsers = configure_list.add_subparsers(dest="configure_list_command", metavar="COMMAND")
-    configure_list.set_defaults(func=lambda args: configure_list.print_help())
-
-    configure_list_collection = configure_list_subparsers.add_parser("collection", help="list collections")
-    configure_list_collection.set_defaults(func=cmd_configure_list_collection)
-
-    configure_remove = configure_subparsers.add_parser("remove", help="remove configuration")
-    configure_remove_subparsers = configure_remove.add_subparsers(dest="configure_remove_command", metavar="COMMAND")
-    configure_remove.set_defaults(func=lambda args: configure_remove.print_help())
-
-    configure_remove_collection = configure_remove_subparsers.add_parser("collection", help="remove a collection")
-    configure_remove_collection.add_argument("--name", required=True, help="collection name")
-    configure_remove_collection.set_defaults(func=cmd_configure_remove_collection)
-
-    configure_init = configure_subparsers.add_parser("init", help="initialize configuration")
-    configure_init_subparsers = configure_init.add_subparsers(dest="configure_init_command", metavar="COMMAND")
-    configure_init.set_defaults(func=lambda args: configure_init.print_help())
-
-    configure_init_collection = configure_init_subparsers.add_parser("collection", help="initialize a collection")
-    configure_init_collection.add_argument("--name", required=True, help="collection name")
-    configure_init_collection.set_defaults(func=cmd_configure_init_collection)
+    collection_run = collection_subparsers.add_parser("run", help="run a collection")
+    collection_run.add_argument("--name", required=True, help="collection name")
+    collection_run.set_defaults(func=cmd_collection_run)
 
     return parser
 

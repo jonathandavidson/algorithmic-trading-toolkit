@@ -42,6 +42,10 @@ hdc <command>
 
 ```bash
 hdc datasource add --name <name> --type alpaca --apiKey <key> --apiSecret <secret>
+
+hdc datasource list
+
+hdc datasource remove --name <name>
 ```
 
 **database** — manage databases

@@ -2,7 +2,7 @@ import argparse
 
 import yaml
 
-from lib.commands.datasource import cmd_datasource_add
+from lib.commands.datasource import cmd_datasource_add, cmd_datasource_list, cmd_datasource_remove
 
 
 def _make_args(**overrides) -> argparse.Namespace:
@@ -46,3 +46,62 @@ def test_cmd_datasource_add_duplicate_name(tmp_path, monkeypatch, capsys):
 
     config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
     assert len(config["datasources"]) == 1
+
+
+def test_cmd_datasource_list_empty(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_datasource_list(argparse.Namespace())
+    assert "No datasources configured" in capsys.readouterr().out
+
+
+def test_cmd_datasource_list_shows_entries(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_datasource_add(_make_args(name="ds1"))
+    cmd_datasource_add(_make_args(name="ds2"))
+    capsys.readouterr()
+
+    cmd_datasource_list(argparse.Namespace())
+    out = capsys.readouterr().out
+    assert "ds1" in out
+    assert "ds2" in out
+
+
+def test_cmd_datasource_list_masks_api_secret(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_datasource_add(_make_args(api_secret="topsecret"))
+    capsys.readouterr()
+
+    cmd_datasource_list(argparse.Namespace())
+    out = capsys.readouterr().out
+    assert "topsecret" not in out
+    assert "********" in out
+
+
+def test_cmd_datasource_remove_not_found(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_datasource_remove(argparse.Namespace(name="ghost"))
+    assert "not found" in capsys.readouterr().out
+
+
+def test_cmd_datasource_remove_confirmed(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_datasource_add(_make_args(name="todelete"))
+    capsys.readouterr()
+    monkeypatch.setattr("builtins.input", lambda _: "y")
+    cmd_datasource_remove(argparse.Namespace(name="todelete"))
+    assert "removed" in capsys.readouterr().out
+
+    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    assert all(ds["name"] != "todelete" for ds in config.get("datasources", []))
+
+
+def test_cmd_datasource_remove_cancelled(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_datasource_add(_make_args(name="keep"))
+    capsys.readouterr()
+    monkeypatch.setattr("builtins.input", lambda _: "n")
+    cmd_datasource_remove(argparse.Namespace(name="keep"))
+    assert "Cancelled" in capsys.readouterr().out
+
+    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    assert any(ds["name"] == "keep" for ds in config["datasources"])

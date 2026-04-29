@@ -60,3 +60,35 @@ def test_add_duplicate_does_not_write(tmp_path, monkeypatch):
 
     config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
     assert len(config["datasources"]) == 1
+
+
+def test_list_returns_empty(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    assert datasource_service.list() == []
+
+
+def test_list_returns_all(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed(name="ds1")
+    _seed(name="ds2")
+    names = [ds["name"] for ds in datasource_service.list()]
+    assert names == ["ds1", "ds2"]
+
+
+def test_remove_returns_name(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed()
+    assert datasource_service.remove("alpaca-prod") == "alpaca-prod"
+
+
+def test_remove_deletes_from_config(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed(name="todelete")
+    datasource_service.remove("todelete")
+    assert all(ds["name"] != "todelete" for ds in datasource_service.list())
+
+
+def test_remove_raises_on_not_found(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(KeyError):
+        datasource_service.remove("ghost")

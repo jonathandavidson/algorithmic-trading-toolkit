@@ -5,6 +5,7 @@ from datetime import datetime
 
 from lib.commands.collection import cmd_collection, cmd_collection_add, cmd_collection_init, cmd_collection_list, cmd_collection_remove, cmd_collection_run
 from lib.commands.database import cmd_database, cmd_database_add, cmd_database_list, cmd_database_remove, cmd_database_test
+from lib.commands.datasource import cmd_datasource, cmd_datasource_add
 from lib.commands.version import cmd_version
 
 
@@ -49,6 +50,17 @@ def build_parser():
     database_test = database_subparsers.add_parser("test", help="test database connection")
     database_test.add_argument("--name", required=True, help="database name")
     database_test.set_defaults(func=cmd_database_test)
+
+    datasource = subparsers.add_parser("datasource", help="manage datasources")
+    datasource.set_defaults(func=cmd_datasource, datasource_parser=datasource)
+    datasource_subparsers = datasource.add_subparsers(dest="datasource_command", metavar="COMMAND")
+
+    datasource_add = datasource_subparsers.add_parser("add", help="add a datasource")
+    datasource_add.add_argument("--name", required=True, help="datasource name")
+    datasource_add.add_argument("--type", dest="datasource_type", required=True, choices=["alpaca"], help="datasource type")
+    datasource_add.add_argument("--apiKey", dest="api_key", required=True, help="API key")
+    datasource_add.add_argument("--apiSecret", dest="api_secret", required=True, help="API secret")
+    datasource_add.set_defaults(func=cmd_datasource_add)
 
     collection = subparsers.add_parser("collection", help="manage collections")
     collection.set_defaults(func=cmd_collection, collection_parser=collection)

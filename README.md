@@ -38,6 +38,12 @@ hdc <command>
 
 ### Commands
 
+**datasource** — manage datasources
+
+```bash
+hdc datasource add --name <name> --type alpaca --apiKey <key> --apiSecret <secret>
+```
+
 **database** — manage databases
 
 ```bash

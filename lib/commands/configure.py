@@ -84,31 +84,6 @@ def cmd_configure_remove_collection(args):
     print(f"Collection '{args.name}' removed.")
 
 
-def cmd_configure_add_database(args):
-    config = load_config()
-    databases = config.setdefault("databases", [])
-    if any(db["name"] == args.name for db in databases):
-        print(f"Database '{args.name}' already exists.")
-        return
-    is_first = len(databases) == 0
-    if is_first:
-        for db in databases:
-            db.pop("default", None)
-    entry = {
-        "name": args.name,
-        "type": args.db_type,
-        "username": args.username,
-        "password": args.password,
-        "host": args.host,
-        "port": args.port,
-        "dbname": args.dbname,
-    }
-    if is_first:
-        entry["default"] = True
-    databases.append(entry)
-    save_config(config)
-    print(f"Database '{args.name}' added.")
-
 
 def cmd_configure_list_database(args):
     databases = load_config().get("databases", [])

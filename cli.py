@@ -3,7 +3,8 @@ import argparse
 import sys
 from datetime import datetime
 
-from lib.commands.configure import cmd_configure, cmd_configure_add_collection, cmd_configure_add_database, cmd_configure_init_collection, cmd_configure_list_collection, cmd_configure_list_database, cmd_configure_remove_collection, cmd_configure_remove_database, cmd_configure_test_database
+from lib.commands.add import cmd_add, cmd_add_database
+from lib.commands.configure import cmd_configure, cmd_configure_add_collection, cmd_configure_init_collection, cmd_configure_list_collection, cmd_configure_list_database, cmd_configure_remove_collection, cmd_configure_remove_database, cmd_configure_test_database
 from lib.commands.run import cmd_run, cmd_run_collection
 from lib.commands.version import cmd_version
 
@@ -26,7 +27,7 @@ def build_parser():
     subparsers.required = False
 
     add = subparsers.add_parser("add", help="add resources")
-    add.set_defaults(func=lambda args: add.print_help())
+    add.set_defaults(func=cmd_add, add_parser=add)
     add_subparsers = add.add_subparsers(dest="add_command", metavar="COMMAND")
 
     add_database = add_subparsers.add_parser("database", help="add a database")
@@ -37,7 +38,7 @@ def build_parser():
     add_database.add_argument("--host", required=True, help="database host")
     add_database.add_argument("--port", type=int, required=True, help="database port")
     add_database.add_argument("--dbname", required=True, help="database name")
-    add_database.set_defaults(func=cmd_configure_add_database)
+    add_database.set_defaults(func=cmd_add_database)
 
     run = subparsers.add_parser("run", help="run a collection")
     run.set_defaults(func=cmd_run, run_parser=run)

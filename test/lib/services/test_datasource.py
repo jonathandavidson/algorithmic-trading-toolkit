@@ -1,5 +1,7 @@
 import pytest
+import requests
 import yaml
+from unittest.mock import MagicMock, patch
 
 import lib.services.datasource as datasource_service
 
@@ -92,3 +94,43 @@ def test_remove_raises_on_not_found(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     with pytest.raises(KeyError):
         datasource_service.remove("ghost")
+
+
+def test_test_returns_name_on_success(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed(name="alpaca-prod")
+    mock_response = MagicMock()
+    mock_response.raise_for_status.return_value = None
+    with patch("lib.services.datasource.requests.get", return_value=mock_response):
+        assert datasource_service.test("alpaca-prod") == "alpaca-prod"
+
+
+def test_test_raises_key_error_when_not_found(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(KeyError):
+        datasource_service.test("missing")
+
+
+def test_test_raises_on_http_error(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed(name="alpaca-prod")
+    mock_response = MagicMock()
+    mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError("401 Unauthorized")
+    with patch("lib.services.datasource.requests.get", return_value=mock_response):
+        with pytest.raises(requests.exceptions.HTTPError):
+            datasource_service.test("alpaca-prod")
+
+
+def test_test_sends_correct_request(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed(name="alpaca-prod", api_key="mykey", api_secret="mysecret")
+    mock_response = MagicMock()
+    mock_response.raise_for_status.return_value = None
+    with patch("lib.services.datasource.requests.get", return_value=mock_response) as mock_post:
+        datasource_service.test("alpaca-prod")
+    mock_post.assert_called_once_with(
+        "https://data.alpaca.markets/v1beta3/crypto/us/bars",
+        auth=("mykey", "mysecret"),
+        headers={"accept": "application/json"},
+        params={"symbols": "BTC/USD", "timeframe": "1D"},
+    )

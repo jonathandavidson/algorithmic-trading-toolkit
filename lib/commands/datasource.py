@@ -25,6 +25,16 @@ def cmd_datasource_list(args: Namespace) -> None:
         print(f"name={ds['name']}  type={ds['type']}  api_key={ds['api_key']}  api_secret=********")
 
 
+def cmd_datasource_test(args: Namespace) -> None:
+    try:
+        datasource_service.test(args.name)
+        print(f"Authentication to '{args.name}' successful.")
+    except KeyError:
+        print(f"Datasource '{args.name}' not found.")
+    except Exception as e:
+        print(f"Authentication to '{args.name}' failed: {e}")
+
+
 def cmd_datasource_remove(args: Namespace) -> None:
     if not any(ds["name"] == args.name for ds in datasource_service.list()):
         print(f"Datasource '{args.name}' not found.")

@@ -1,4 +1,10 @@
+import requests
+
 from lib.config import load_config, save_config
+
+_TEST_URLS = {
+    "alpaca": "https://data.alpaca.markets/v1beta3/crypto/us/bars",
+}
 
 
 def list() -> list[dict]:
@@ -19,6 +25,22 @@ def add(name: str, datasource_type: str, api_key: str, api_secret: str) -> dict:
     datasources.append(entry)
     save_config(config)
     return entry
+
+
+def test(name: str) -> str:
+    datasources = load_config().get("datasources", [])
+    ds = next((d for d in datasources if d["name"] == name), None)
+    if ds is None:
+        raise KeyError(name)
+    url = _TEST_URLS[ds["type"]]
+    response = requests.get(
+        url,
+        auth=(ds["api_key"], ds["api_secret"]),
+        headers={"accept": "application/json"},
+        params={"symbols": "BTC/USD", "timeframe": "1D"},
+    )
+    response.raise_for_status()
+    return name
 
 
 def remove(name: str) -> str:

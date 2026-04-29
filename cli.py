@@ -5,7 +5,7 @@ from datetime import datetime
 
 from lib.commands.collection import cmd_collection, cmd_collection_add, cmd_collection_init, cmd_collection_list, cmd_collection_remove, cmd_collection_run
 from lib.commands.database import cmd_database, cmd_database_add, cmd_database_list, cmd_database_remove, cmd_database_test
-from lib.commands.datasource import cmd_datasource, cmd_datasource_add, cmd_datasource_list, cmd_datasource_remove
+from lib.commands.datasource import cmd_datasource, cmd_datasource_add, cmd_datasource_list, cmd_datasource_remove, cmd_datasource_test
 from lib.commands.version import cmd_version
 
 
@@ -64,6 +64,10 @@ def build_parser():
 
     datasource_list = datasource_subparsers.add_parser("list", help="list datasources")
     datasource_list.set_defaults(func=cmd_datasource_list)
+
+    datasource_test = datasource_subparsers.add_parser("test", help="test datasource authentication")
+    datasource_test.add_argument("--name", required=True, help="datasource name")
+    datasource_test.set_defaults(func=cmd_datasource_test)
 
     datasource_remove = datasource_subparsers.add_parser("remove", help="remove a datasource")
     datasource_remove.add_argument("--name", required=True, help="datasource name")

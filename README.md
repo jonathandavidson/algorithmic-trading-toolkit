@@ -45,6 +45,8 @@ hdc datasource add --name <name> --type alpaca --apiKey <key> --apiSecret <secre
 
 hdc datasource list
 
+hdc datasource test --name <name>
+
 hdc datasource remove --name <name>
 ```
 

@@ -1,8 +1,10 @@
 import argparse
+from unittest.mock import MagicMock, patch
 
+import requests
 import yaml
 
-from lib.commands.datasource import cmd_datasource_add, cmd_datasource_list, cmd_datasource_remove
+from lib.commands.datasource import cmd_datasource_add, cmd_datasource_list, cmd_datasource_remove, cmd_datasource_test
 
 
 def _make_args(**overrides) -> argparse.Namespace:
@@ -93,6 +95,36 @@ def test_cmd_datasource_remove_confirmed(tmp_path, monkeypatch, capsys):
 
     config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
     assert all(ds["name"] != "todelete" for ds in config.get("datasources", []))
+
+
+def test_cmd_datasource_test_not_found(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_datasource_test(argparse.Namespace(name="missing"))
+    assert "not found" in capsys.readouterr().out
+
+
+def test_cmd_datasource_test_success(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_datasource_add(_make_args(name="alpaca-prod"))
+    capsys.readouterr()
+    mock_response = MagicMock()
+    mock_response.raise_for_status.return_value = None
+    with patch("lib.services.datasource.requests.get", return_value=mock_response):
+        cmd_datasource_test(argparse.Namespace(name="alpaca-prod"))
+    assert "successful" in capsys.readouterr().out
+
+
+def test_cmd_datasource_test_failure(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_datasource_add(_make_args(name="alpaca-prod"))
+    capsys.readouterr()
+    mock_response = MagicMock()
+    mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError("401 Unauthorized")
+    with patch("lib.services.datasource.requests.get", return_value=mock_response):
+        cmd_datasource_test(argparse.Namespace(name="alpaca-prod"))
+    out = capsys.readouterr().out
+    assert "failed" in out
+    assert "401 Unauthorized" in out
 
 
 def test_cmd_datasource_remove_cancelled(tmp_path, monkeypatch, capsys):

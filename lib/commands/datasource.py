@@ -23,7 +23,7 @@ def cmd_datasource_list(args: Namespace) -> None:
         print("No datasources configured.")
         return
     for ds in datasources:
-        print(f"name={ds['name']}  type={ds['type']}  api_key={ds['api_key']}  api_secret=********")
+        print(f"name={ds.name}  type={ds.type}  api_key={ds.api_key}  api_secret=********")
 
 
 def cmd_datasource_test(args: Namespace) -> None:
@@ -37,7 +37,7 @@ def cmd_datasource_test(args: Namespace) -> None:
 
 
 def cmd_datasource_remove(args: Namespace) -> None:
-    if not any(ds["name"] == args.name for ds in datasource_service.list()):
+    if not any(ds.name == args.name for ds in datasource_service.list()):
         print(f"Datasource '{args.name}' not found.")
         return
     answer = input(f"Remove datasource '{args.name}'? [y/N] ")

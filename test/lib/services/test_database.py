@@ -27,24 +27,24 @@ def _seed_db(**overrides) -> None:
 def test_add_returns_entry(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     entry = database_service.add(_make())
-    assert entry["name"] == "local"
-    assert entry["type"] == "postgres"
-    assert entry["host"] == "localhost"
-    assert entry["port"] == 5432
-    assert entry["dbname"] == "mydb"
+    assert entry.name == "local"
+    assert entry.type == "postgres"
+    assert entry.host == "localhost"
+    assert entry.port == 5432
+    assert entry.dbname == "mydb"
 
 
 def test_add_first_entry_is_default(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     entry = database_service.add(_make(name="first"))
-    assert entry.get("default") is True
+    assert entry.default is True
 
 
 def test_add_second_entry_not_default(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     database_service.add(_make(name="first"))
     entry = database_service.add(_make(name="second"))
-    assert "default" not in entry
+    assert not entry.default
 
 
 def test_add_persists_to_config(tmp_path, monkeypatch):
@@ -72,7 +72,7 @@ def test_list_returns_all(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     _seed_db(name="db1")
     _seed_db(name="db2")
-    names = [db["name"] for db in database_service.list()]
+    names = [db.name for db in database_service.list()]
     assert names == ["db1", "db2"]
 
 

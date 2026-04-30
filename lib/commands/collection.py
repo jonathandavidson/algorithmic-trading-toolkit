@@ -27,20 +27,20 @@ def cmd_collection_list(args: Namespace) -> None:
         return
     for c in collections:
         parts = [
-            f"name={c['name']}",
-            f"database={c['database']}",
-            f"type={c['type']}",
-            f"start={c['start']}",
+            f"name={c.name}",
+            f"database={c.database}",
+            f"type={c.type}",
+            f"start={c.start}",
         ]
-        if "frequency" in c:
-            parts.append(f"frequency={c['frequency']}")
-        if "end" in c:
-            parts.append(f"end={c['end']}")
+        if c.frequency is not None:
+            parts.append(f"frequency={c.frequency}")
+        if c.end is not None:
+            parts.append(f"end={c.end}")
         print("  ".join(parts))
 
 
 def cmd_collection_remove(args: Namespace) -> None:
-    if not any(c["name"] == args.name for c in collection_service.list()):
+    if not any(c.name == args.name for c in collection_service.list()):
         print(f"Collection '{args.name}' not found.")
         return
     answer = input(f"Remove collection '{args.name}'? [y/N] ")
@@ -52,16 +52,16 @@ def cmd_collection_remove(args: Namespace) -> None:
 
 
 def cmd_collection_init(args: Namespace) -> None:
-    collection = next((c for c in collection_service.list() if c["name"] == args.name), None)
+    collection = next((c for c in collection_service.list() if c.name == args.name), None)
     if collection is None:
         print(f"Collection '{args.name}' not found.")
         return
-    db = next((d for d in database_service.list() if d["name"] == collection["database"]), None)
+    db = next((d for d in database_service.list() if d.name == collection.database), None)
     if db is None:
-        print(f"Database '{collection['database']}' not found.")
+        print(f"Database '{collection.database}' not found.")
         return
     answer = input(
-        f"Create tables in database '{db['name']}' ({db['host']}:{db['port']}/{db['dbname']})? "
+        f"Create tables in database '{db.name}' ({db.host}:{db.port}/{db.dbname})? "
         f"Any existing tables will be dropped and recreated — back up data to avoid losing it. [y/N] "
     )
     if answer.strip().lower() != "y":

@@ -23,10 +23,10 @@ def test_add_returns_entry(tmp_path, monkeypatch):
     entry = datasource_service.add(DatasourceConfiguration(
         name="alpaca-prod", type="alpaca", api_key="key123", api_secret="secret456"
     ))
-    assert entry["name"] == "alpaca-prod"
-    assert entry["type"] == "alpaca"
-    assert entry["api_key"] == "key123"
-    assert entry["api_secret"] == "secret456"
+    assert entry.name == "alpaca-prod"
+    assert entry.type == "alpaca"
+    assert entry.api_key == "key123"
+    assert entry.api_secret == "secret456"
 
 
 def test_add_persists_to_config(tmp_path, monkeypatch):
@@ -76,7 +76,7 @@ def test_list_returns_all(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     _seed(name="ds1")
     _seed(name="ds2")
-    names = [ds["name"] for ds in datasource_service.list()]
+    names = [ds.name for ds in datasource_service.list()]
     assert names == ["ds1", "ds2"]
 
 
@@ -90,7 +90,7 @@ def test_remove_deletes_from_config(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     _seed(name="todelete")
     datasource_service.remove("todelete")
-    assert all(ds["name"] != "todelete" for ds in datasource_service.list())
+    assert all(ds.name != "todelete" for ds in datasource_service.list())
 
 
 def test_remove_raises_on_not_found(tmp_path, monkeypatch):

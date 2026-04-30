@@ -41,10 +41,10 @@ def test_add_returns_entry(tmp_path, monkeypatch):
         type="historical-bars",
         start="2024-01-01T00:00:00",
     ))
-    assert entry["name"] == "bars"
-    assert entry["database"] == "local"
-    assert entry["type"] == "historical-bars"
-    assert entry["start"] == "2024-01-01T00:00:00"
+    assert entry.name == "bars"
+    assert entry.database == "local"
+    assert entry.type == "historical-bars"
+    assert entry.start == "2024-01-01T00:00:00"
 
 
 def test_add_omits_optional_fields_when_absent(tmp_path, monkeypatch):
@@ -55,8 +55,8 @@ def test_add_omits_optional_fields_when_absent(tmp_path, monkeypatch):
         type="historical-bars",
         start="2024-01-01T00:00:00",
     ))
-    assert "frequency" not in entry
-    assert "end" not in entry
+    assert entry.frequency is None
+    assert entry.end is None
 
 
 def test_add_includes_optional_fields_when_provided(tmp_path, monkeypatch):
@@ -69,8 +69,8 @@ def test_add_includes_optional_fields_when_provided(tmp_path, monkeypatch):
         frequency="1m",
         end="2024-06-01T00:00:00",
     ))
-    assert entry["frequency"] == "1m"
-    assert entry["end"] == "2024-06-01T00:00:00"
+    assert entry.frequency == "1m"
+    assert entry.end == "2024-06-01T00:00:00"
 
 
 def test_add_persists_to_config(tmp_path, monkeypatch):
@@ -98,7 +98,7 @@ def test_list_returns_all(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     _seed_collection(name="c1")
     _seed_collection(name="c2")
-    names = [c["name"] for c in collection_service.list()]
+    names = [c.name for c in collection_service.list()]
     assert names == ["c1", "c2"]
 
 

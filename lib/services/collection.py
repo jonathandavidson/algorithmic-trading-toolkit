@@ -6,14 +6,12 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from lib.services.configuration import ConfigurationService
+from lib.services.database import DatabaseConfiguration
 from lib.services.interface.configuration_type import ConfigurationTypeInterface
 from lib.utils.database import get_engine
 from lib.models.base import Base
 from lib.models.historical_bars import HistoricalBar
 import lib.models.historical_bars  # registers HistoricalBar with Base.metadata
-
-_config = ConfigurationService("collections")
-_db_config = ConfigurationService("databases")
 
 
 class CollectionNotFoundError(LookupError):
@@ -42,26 +40,30 @@ class CollectionConfiguration(ConfigurationTypeInterface):
         return d
 
 
-def _find_collection(name: str) -> dict:
+_config = ConfigurationService("collections", CollectionConfiguration)
+_db_config = ConfigurationService("databases", DatabaseConfiguration)
+
+
+def _find_collection(name: str) -> CollectionConfiguration:
     try:
-        return _config.get_one(name)
+        return _config.get_one(name)  # type: ignore[return-value]
     except KeyError:
         raise CollectionNotFoundError(name)
 
 
-def _find_database(collection: dict) -> dict:
+def _find_database(collection: CollectionConfiguration) -> DatabaseConfiguration:
     try:
-        return _db_config.get_one(collection["database"])
+        return _db_config.get_one(collection.database)  # type: ignore[return-value]
     except KeyError:
-        raise DatabaseNotFoundError(collection["database"])
+        raise DatabaseNotFoundError(collection.database)
 
 
-def add(configuration: CollectionConfiguration) -> dict:
-    return _config.add(configuration)
+def add(configuration: CollectionConfiguration) -> CollectionConfiguration:
+    return _config.add(configuration)  # type: ignore[return-value]
 
 
-def list() -> list[dict]:
-    return _config.list("name")
+def list() -> list[CollectionConfiguration]:
+    return _config.list("name")  # type: ignore[return-value]
 
 
 def remove(name: str) -> str:
@@ -74,7 +76,7 @@ def remove(name: str) -> str:
 def init(name: str) -> str:
     collection = _find_collection(name)
     db = _find_database(collection)
-    engine = get_engine(db)
+    engine = get_engine(db.to_dict())
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
     return name
@@ -83,13 +85,13 @@ def init(name: str) -> str:
 def run(name: str) -> int:
     collection = _find_collection(name)
     db = _find_database(collection)
-    engine = get_engine(db)
+    engine = get_engine(db.to_dict())
     now = datetime.now(timezone.utc)
 
     bars = [
         HistoricalBar(
             id=1,
-            collection_name=collection["name"],
+            collection_name=collection.name,
             symbol="AAPL",
             time=datetime(2024, 1, 2, 9, 30, tzinfo=timezone.utc),
             open=Decimal("185.0000"),
@@ -104,7 +106,7 @@ def run(name: str) -> int:
         ),
         HistoricalBar(
             id=2,
-            collection_name=collection["name"],
+            collection_name=collection.name,
             symbol="AAPL",
             time=datetime(2024, 1, 3, 9, 30, tzinfo=timezone.utc),
             open=Decimal("184.2200"),
@@ -119,7 +121,7 @@ def run(name: str) -> int:
         ),
         HistoricalBar(
             id=3,
-            collection_name=collection["name"],
+            collection_name=collection.name,
             symbol="AAPL",
             time=datetime(2024, 1, 4, 9, 30, tzinfo=timezone.utc),
             open=Decimal("182.1500"),

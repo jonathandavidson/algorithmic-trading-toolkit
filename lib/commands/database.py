@@ -26,16 +26,16 @@ def cmd_database_list(args: Namespace) -> None:
         print("No databases configured.")
         return
     for db in databases:
-        default_flag = "  default=true" if db.get("default") else ""
+        default_flag = "  default=true" if db.default else ""
         print(
-            f"name={db['name']}  type={db['type']}  host={db['host']}  "
-            f"port={db['port']}  dbname={db['dbname']}  "
-            f"username={db['username']}  password=********{default_flag}"
+            f"name={db.name}  type={db.type}  host={db.host}  "
+            f"port={db.port}  dbname={db.dbname}  "
+            f"username={db.username}  password=********{default_flag}"
         )
 
 
 def cmd_database_remove(args: Namespace) -> None:
-    if not any(db["name"] == args.name for db in database_service.list()):
+    if not any(db.name == args.name for db in database_service.list()):
         print(f"Database '{args.name}' not found.")
         return
     answer = input(f"Remove database '{args.name}'? [y/N] ")

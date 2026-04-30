@@ -5,7 +5,6 @@ import requests
 from lib.services.configuration import ConfigurationService
 from lib.services.interface.configuration_type import ConfigurationTypeInterface
 
-_config = ConfigurationService("datasources")
 _TEST_URLS = {
     "alpaca": "https://data.alpaca.markets/v1beta3/crypto/us/bars",
 }
@@ -19,12 +18,15 @@ class DatasourceConfiguration(ConfigurationTypeInterface):
     api_secret: str
 
 
-def add(configuration: DatasourceConfiguration) -> dict:
-    return _config.add(configuration)
+_config = ConfigurationService("datasources", DatasourceConfiguration)
 
 
-def list() -> list[dict]:
-    return _config.list("name")
+def add(configuration: DatasourceConfiguration) -> DatasourceConfiguration:
+    return _config.add(configuration)  # type: ignore[return-value]
+
+
+def list() -> list[DatasourceConfiguration]:
+    return _config.list("name")  # type: ignore[return-value]
 
 
 def remove(name: str) -> str:
@@ -33,13 +35,13 @@ def remove(name: str) -> str:
 
 def test(name: str) -> str:
     datasources = _config.list("name")
-    ds = next((d for d in datasources if d["name"] == name), None)
+    ds = next((d for d in datasources if d.name == name), None)
     if ds is None:
         raise KeyError(name)
-    url = _TEST_URLS[ds["type"]]
+    url = _TEST_URLS[ds.type]
     response = requests.get(
         url,
-        auth=(ds["api_key"], ds["api_secret"]),
+        auth=(ds.api_key, ds.api_secret),
         headers={"accept": "application/json"},
         params={"symbols": "BTC/USD", "timeframe": "1D"},
     )

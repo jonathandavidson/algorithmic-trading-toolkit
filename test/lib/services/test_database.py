@@ -2,8 +2,9 @@ import pytest
 import yaml
 from unittest.mock import MagicMock, patch
 
-import lib.services.database as database_service
-from lib.services.database import DatabaseConfiguration
+from lib.services.database import DatabaseConfiguration, DatabaseConfigurationService
+
+database_service = DatabaseConfigurationService()
 
 
 def _make(**overrides) -> DatabaseConfiguration:

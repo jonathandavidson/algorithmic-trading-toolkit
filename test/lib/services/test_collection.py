@@ -2,10 +2,11 @@ import pytest
 import yaml
 from unittest.mock import MagicMock, patch
 
-import lib.services.collection as collection_service
-import lib.services.database as database_service
-from lib.services.collection import CollectionConfiguration, CollectionNotFoundError, DatabaseNotFoundError
-from lib.services.database import DatabaseConfiguration
+from lib.services.collection import CollectionConfiguration, CollectionConfigurationService, CollectionNotFoundError, DatabaseNotFoundError
+from lib.services.database import DatabaseConfiguration, DatabaseConfigurationService
+
+collection_service = CollectionConfigurationService()
+database_service = DatabaseConfigurationService()
 
 
 def _seed_collection(**overrides) -> dict:

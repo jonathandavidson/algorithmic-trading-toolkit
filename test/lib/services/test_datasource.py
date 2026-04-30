@@ -3,8 +3,9 @@ import requests
 import yaml
 from unittest.mock import MagicMock, patch
 
-import lib.services.datasource as datasource_service
-from lib.services.datasource import DatasourceConfiguration
+from lib.services.datasource import DatasourceConfiguration, DatasourceConfigurationService
+
+datasource_service = DatasourceConfigurationService()
 
 
 def _seed(**overrides) -> dict:

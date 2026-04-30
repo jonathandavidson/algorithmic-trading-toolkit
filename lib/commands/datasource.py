@@ -1,12 +1,13 @@
 from argparse import Namespace
 
-import lib.services.datasource as datasource_service
-from lib.services.datasource import DatasourceConfiguration
+from lib.services.datasource import DatasourceConfiguration, DatasourceConfigurationService
+
+_service = DatasourceConfigurationService()
 
 
 def cmd_datasource_add(args: Namespace) -> None:
     try:
-        datasource_service.add(DatasourceConfiguration(
+        _service.add(DatasourceConfiguration(
             name=args.name,
             type=args.datasource_type,
             api_key=args.api_key,
@@ -18,7 +19,7 @@ def cmd_datasource_add(args: Namespace) -> None:
 
 
 def cmd_datasource_list(args: Namespace) -> None:
-    datasources = datasource_service.list()
+    datasources = _service.list()
     if not datasources:
         print("No datasources configured.")
         return
@@ -28,7 +29,7 @@ def cmd_datasource_list(args: Namespace) -> None:
 
 def cmd_datasource_test(args: Namespace) -> None:
     try:
-        datasource_service.test(args.name)
+        _service.test(args.name)
         print(f"Authentication to '{args.name}' successful.")
     except KeyError:
         print(f"Datasource '{args.name}' not found.")
@@ -37,14 +38,14 @@ def cmd_datasource_test(args: Namespace) -> None:
 
 
 def cmd_datasource_remove(args: Namespace) -> None:
-    if not any(ds.name == args.name for ds in datasource_service.list()):
+    if not any(ds.name == args.name for ds in _service.list()):
         print(f"Datasource '{args.name}' not found.")
         return
     answer = input(f"Remove datasource '{args.name}'? [y/N] ")
     if answer.strip().lower() != "y":
         print("Cancelled.")
         return
-    datasource_service.remove(args.name)
+    _service.remove(args.name)
     print(f"Datasource '{args.name}' removed.")
 
 

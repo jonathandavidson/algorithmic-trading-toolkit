@@ -1,13 +1,15 @@
 from argparse import Namespace
 
-import lib.services.collection as collection_service
-import lib.services.database as database_service
-from lib.services.collection import CollectionNotFoundError, CollectionConfiguration, DatabaseNotFoundError
+from lib.services.collection import CollectionConfiguration, CollectionConfigurationService, CollectionNotFoundError, DatabaseNotFoundError
+from lib.services.database import DatabaseConfigurationService
+
+_service = CollectionConfigurationService()
+_db_service = DatabaseConfigurationService()
 
 
 def cmd_collection_add(args: Namespace) -> None:
     try:
-        collection_service.add(CollectionConfiguration(
+        _service.add(CollectionConfiguration(
             name=args.name,
             database=args.database,
             type=args.type,
@@ -21,7 +23,7 @@ def cmd_collection_add(args: Namespace) -> None:
 
 
 def cmd_collection_list(args: Namespace) -> None:
-    collections = collection_service.list()
+    collections = _service.list()
     if not collections:
         print("No collections configured.")
         return
@@ -40,23 +42,23 @@ def cmd_collection_list(args: Namespace) -> None:
 
 
 def cmd_collection_remove(args: Namespace) -> None:
-    if not any(c.name == args.name for c in collection_service.list()):
+    if not any(c.name == args.name for c in _service.list()):
         print(f"Collection '{args.name}' not found.")
         return
     answer = input(f"Remove collection '{args.name}'? [y/N] ")
     if answer.strip().lower() != "y":
         print("Cancelled.")
         return
-    collection_service.remove(args.name)
+    _service.remove(args.name)
     print(f"Collection '{args.name}' removed.")
 
 
 def cmd_collection_init(args: Namespace) -> None:
-    collection = next((c for c in collection_service.list() if c.name == args.name), None)
+    collection = next((c for c in _service.list() if c.name == args.name), None)
     if collection is None:
         print(f"Collection '{args.name}' not found.")
         return
-    db = next((d for d in database_service.list() if d.name == collection.database), None)
+    db = next((d for d in _db_service.list() if d.name == collection.database), None)
     if db is None:
         print(f"Database '{collection.database}' not found.")
         return
@@ -67,13 +69,13 @@ def cmd_collection_init(args: Namespace) -> None:
     if answer.strip().lower() != "y":
         print("Cancelled.")
         return
-    collection_service.init(args.name)
+    _service.init(args.name)
     print("Tables created.")
 
 
 def cmd_collection_run(args: Namespace) -> None:
     try:
-        count = collection_service.run(args.name)
+        count = _service.run(args.name)
         print(f"Inserted {count} records.")
     except CollectionNotFoundError:
         print(f"Collection '{args.name}' not found.")

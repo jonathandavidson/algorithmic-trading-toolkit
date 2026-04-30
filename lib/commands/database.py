@@ -1,12 +1,13 @@
 from argparse import Namespace
 
-import lib.services.database as database_service
-from lib.services.database import DatabaseConfiguration
+from lib.services.database import DatabaseConfiguration, DatabaseConfigurationService
+
+_service = DatabaseConfigurationService()
 
 
 def cmd_database_add(args: Namespace) -> None:
     try:
-        database_service.add(DatabaseConfiguration(
+        _service.add(DatabaseConfiguration(
             name=args.name,
             type=args.db_type,
             username=args.username,
@@ -21,7 +22,7 @@ def cmd_database_add(args: Namespace) -> None:
 
 
 def cmd_database_list(args: Namespace) -> None:
-    databases = database_service.list()
+    databases = _service.list()
     if not databases:
         print("No databases configured.")
         return
@@ -35,20 +36,20 @@ def cmd_database_list(args: Namespace) -> None:
 
 
 def cmd_database_remove(args: Namespace) -> None:
-    if not any(db.name == args.name for db in database_service.list()):
+    if not any(db.name == args.name for db in _service.list()):
         print(f"Database '{args.name}' not found.")
         return
     answer = input(f"Remove database '{args.name}'? [y/N] ")
     if answer.strip().lower() != "y":
         print("Cancelled.")
         return
-    database_service.remove(args.name)
+    _service.remove(args.name)
     print(f"Database '{args.name}' removed.")
 
 
 def cmd_database_test(args: Namespace) -> None:
     try:
-        database_service.test(args.name)
+        _service.test(args.name)
         print(f"Connection to '{args.name}' successful.")
     except KeyError:
         print(f"Database '{args.name}' not found.")

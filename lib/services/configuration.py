@@ -19,6 +19,13 @@ class ConfigurationService(ConfigServiceInterface):
     def list(self, name: str) -> list[dict]:
         return load_config().get(self._type, [])
 
+    def get_one(self, name: str) -> dict:
+        entries = load_config().get(self._type, [])
+        entry = next((e for e in entries if e["name"] == name), None)
+        if entry is None:
+            raise KeyError(name)
+        return entry
+
     def remove(self, name: str) -> str:
         config = load_config()
         entries = config.get(self._type, [])

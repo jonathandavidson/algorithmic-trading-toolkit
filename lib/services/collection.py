@@ -22,17 +22,17 @@ class DatabaseNotFoundError(LookupError):
 
 
 def _find_collection(name: str) -> dict:
-    collection = next((c for c in _config.list("name") if c["name"] == name), None)
-    if collection is None:
+    try:
+        return _config.get_one(name)
+    except KeyError:
         raise CollectionNotFoundError(name)
-    return collection
 
 
 def _find_database(collection: dict) -> dict:
-    db = next((d for d in _db_config.list("name") if d["name"] == collection["database"]), None)
-    if db is None:
+    try:
+        return _db_config.get_one(collection["database"])
+    except KeyError:
         raise DatabaseNotFoundError(collection["database"])
-    return db
 
 
 def add(name: str, database: str, type: str, start: str, frequency: str | None = None, end: str | None = None) -> dict:

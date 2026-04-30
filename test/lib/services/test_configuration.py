@@ -100,5 +100,27 @@ def test_remove_does_not_affect_other_types(tmp_path, monkeypatch):
     assert len(ConfigurationService("collections").list("name")) == 1
 
 
+def test_get_one_returns_entry(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    svc = ConfigurationService("databases")
+    svc.add("local", _entry("local", type="postgres"))
+    result = svc.get_one("local")
+    assert result["name"] == "local"
+    assert result["type"] == "postgres"
+
+
+def test_get_one_raises_on_not_found(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(KeyError):
+        ConfigurationService("databases").get_one("ghost")
+
+
+def test_get_one_is_scoped_to_type(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    ConfigurationService("databases").add("local", _entry("local"))
+    with pytest.raises(KeyError):
+        ConfigurationService("collections").get_one("local")
+
+
 def test_implements_interface(tmp_path, monkeypatch):
     assert isinstance(ConfigurationService("databases"), ConfigServiceInterface)

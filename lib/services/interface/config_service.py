@@ -11,3 +11,6 @@ class ConfigServiceInterface(ABC):
 
     @abstractmethod
     def remove(self, name: str) -> str: ...
+
+    @abstractmethod
+    def get_one(self, name: str) -> dict: ...

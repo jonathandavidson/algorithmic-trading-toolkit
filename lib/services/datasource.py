@@ -1,6 +1,8 @@
 import requests
 
-import lib.services.configuration as configuration_service
+from lib.services.configuration import ConfigurationService
+
+_config = ConfigurationService()
 
 _TYPE = "datasources"
 _TEST_URLS = {
@@ -15,19 +17,19 @@ def add(name: str, datasource_type: str, api_key: str, api_secret: str) -> dict:
         "api_key": api_key,
         "api_secret": api_secret,
     }
-    return configuration_service.add(_TYPE, name, entry)
+    return _config.add(_TYPE, name, entry)
 
 
 def list() -> list[dict]:
-    return configuration_service.list(_TYPE, "name")
+    return _config.list(_TYPE, "name")
 
 
 def remove(name: str) -> str:
-    return configuration_service.remove(_TYPE, name)
+    return _config.remove(_TYPE, name)
 
 
 def test(name: str) -> str:
-    datasources = configuration_service.list(_TYPE, "name")
+    datasources = _config.list(_TYPE, "name")
     ds = next((d for d in datasources if d["name"] == name), None)
     if ds is None:
         raise KeyError(name)

@@ -1,13 +1,11 @@
-from lib.utils.config import load_config, save_config
+import lib.services.configuration as configuration_service
 from lib.utils.database import connect
+
+_TYPE = "databases"
 
 
 def add(name: str, db_type: str, username: str, password: str, host: str, port: int, dbname: str) -> dict:
-    config = load_config()
-    databases = config.setdefault("databases", [])
-    if any(db["name"] == name for db in databases):
-        raise ValueError(f"Database '{name}' already exists.")
-    is_first = len(databases) == 0
+    is_first = len(configuration_service.list(_TYPE, "name")) == 0
     entry = {
         "name": name,
         "type": db_type,
@@ -19,27 +17,19 @@ def add(name: str, db_type: str, username: str, password: str, host: str, port: 
     }
     if is_first:
         entry["default"] = True
-    databases.append(entry)
-    save_config(config)
-    return entry
+    return configuration_service.add(_TYPE, name, entry)
 
 
 def list() -> list[dict]:
-    return load_config().get("databases", [])
+    return configuration_service.list(_TYPE, "name")
 
 
 def remove(name: str) -> str:
-    config = load_config()
-    databases = config.get("databases", [])
-    if not any(db["name"] == name for db in databases):
-        raise KeyError(name)
-    config["databases"] = [db for db in databases if db["name"] != name]
-    save_config(config)
-    return name
+    return configuration_service.remove(_TYPE, name)
 
 
 def test(name: str) -> str:
-    databases = load_config().get("databases", [])
+    databases = configuration_service.list(_TYPE, "name")
     db = next((d for d in databases if d["name"] == name), None)
     if db is None:
         raise KeyError(name)

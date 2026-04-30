@@ -3,11 +3,13 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
-from lib.utils.config import load_config, save_config
+import lib.services.configuration as configuration_service
 from lib.utils.database import get_engine
 from lib.models.base import Base
 from lib.models.historical_bars import HistoricalBar
 import lib.models.historical_bars  # registers HistoricalBar with Base.metadata
+
+_TYPE = "collections"
 
 
 class CollectionNotFoundError(LookupError):
@@ -19,26 +21,20 @@ class DatabaseNotFoundError(LookupError):
 
 
 def _find_collection(name: str) -> dict:
-    config = load_config()
-    collection = next((c for c in config.get("collections", []) if c["name"] == name), None)
+    collection = next((c for c in configuration_service.list(_TYPE, "name") if c["name"] == name), None)
     if collection is None:
         raise CollectionNotFoundError(name)
     return collection
 
 
 def _find_database(collection: dict) -> dict:
-    config = load_config()
-    db = next((d for d in config.get("databases", []) if d["name"] == collection["database"]), None)
+    db = next((d for d in configuration_service.list("databases", "name") if d["name"] == collection["database"]), None)
     if db is None:
         raise DatabaseNotFoundError(collection["database"])
     return db
 
 
 def add(name: str, database: str, type: str, start: str, frequency: str | None = None, end: str | None = None) -> dict:
-    config = load_config()
-    collections = config.setdefault("collections", [])
-    if any(c["name"] == name for c in collections):
-        raise ValueError(f"Collection '{name}' already exists.")
     entry = {
         "name": name,
         "database": database,
@@ -49,23 +45,18 @@ def add(name: str, database: str, type: str, start: str, frequency: str | None =
         entry["frequency"] = frequency
     if end is not None:
         entry["end"] = end
-    collections.append(entry)
-    save_config(config)
-    return entry
+    return configuration_service.add(_TYPE, name, entry)
 
 
 def list() -> list[dict]:
-    return load_config().get("collections", [])
+    return configuration_service.list(_TYPE, "name")
 
 
 def remove(name: str) -> str:
-    config = load_config()
-    collections = config.get("collections", [])
-    if not any(c["name"] == name for c in collections):
+    try:
+        return configuration_service.remove(_TYPE, name)
+    except KeyError:
         raise CollectionNotFoundError(name)
-    config["collections"] = [c for c in collections if c["name"] != name]
-    save_config(config)
-    return name
 
 
 def init(name: str) -> str:

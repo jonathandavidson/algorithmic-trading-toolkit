@@ -1,9 +1,12 @@
+import dataclasses
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
 from lib.services.configuration import ConfigurationService
+from lib.services.interface.configuration_type import ConfigurationTypeInterface
 from lib.utils.database import get_engine
 from lib.models.base import Base
 from lib.models.historical_bars import HistoricalBar
@@ -21,6 +24,24 @@ class DatabaseNotFoundError(LookupError):
     pass
 
 
+@dataclass
+class CollectionConfiguration(ConfigurationTypeInterface):
+    name: str
+    database: str
+    type: str
+    start: str
+    frequency: str | None = None
+    end: str | None = None
+
+    def to_dict(self) -> dict:
+        d = dataclasses.asdict(self)
+        if d["frequency"] is None:
+            del d["frequency"]
+        if d["end"] is None:
+            del d["end"]
+        return d
+
+
 def _find_collection(name: str) -> dict:
     try:
         return _config.get_one(name)
@@ -35,18 +56,8 @@ def _find_database(collection: dict) -> dict:
         raise DatabaseNotFoundError(collection["database"])
 
 
-def add(name: str, database: str, type: str, start: str, frequency: str | None = None, end: str | None = None) -> dict:
-    entry = {
-        "name": name,
-        "database": database,
-        "type": type,
-        "start": start,
-    }
-    if frequency is not None:
-        entry["frequency"] = frequency
-    if end is not None:
-        entry["end"] = end
-    return _config.add(name, entry)
+def add(configuration: CollectionConfiguration) -> dict:
+    return _config.add(configuration)
 
 
 def list() -> list[dict]:

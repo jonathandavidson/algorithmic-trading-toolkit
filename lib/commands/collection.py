@@ -2,19 +2,19 @@ from argparse import Namespace
 
 import lib.services.collection as collection_service
 import lib.services.database as database_service
-from lib.services.collection import CollectionNotFoundError, DatabaseNotFoundError
+from lib.services.collection import CollectionNotFoundError, CollectionConfiguration, DatabaseNotFoundError
 
 
 def cmd_collection_add(args: Namespace) -> None:
     try:
-        collection_service.add(
+        collection_service.add(CollectionConfiguration(
             name=args.name,
             database=args.database,
             type=args.type,
             start=args.start,
             frequency=args.frequency,
             end=args.end,
-        )
+        ))
         print(f"Collection '{args.name}' added.")
     except ValueError as e:
         print(e)

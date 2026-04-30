@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
 
+from lib.services.interface.configuration_type import ConfigurationTypeInterface
+
 
 class ConfigServiceInterface(ABC):
 
     @abstractmethod
-    def add(self, name: str, configuration: dict) -> dict: ...
+    def add(self, configuration: ConfigurationTypeInterface) -> dict: ...
 
     @abstractmethod
     def list(self, name: str) -> list[dict]: ...

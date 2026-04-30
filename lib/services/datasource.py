@@ -1,6 +1,9 @@
+from dataclasses import dataclass
+
 import requests
 
 from lib.services.configuration import ConfigurationService
+from lib.services.interface.configuration_type import ConfigurationTypeInterface
 
 _config = ConfigurationService("datasources")
 _TEST_URLS = {
@@ -8,14 +11,16 @@ _TEST_URLS = {
 }
 
 
-def add(name: str, datasource_type: str, api_key: str, api_secret: str) -> dict:
-    entry = {
-        "name": name,
-        "type": datasource_type,
-        "api_key": api_key,
-        "api_secret": api_secret,
-    }
-    return _config.add(name, entry)
+@dataclass
+class DatasourceConfiguration(ConfigurationTypeInterface):
+    name: str
+    type: str
+    api_key: str
+    api_secret: str
+
+
+def add(configuration: DatasourceConfiguration) -> dict:
+    return _config.add(configuration)
 
 
 def list() -> list[dict]:

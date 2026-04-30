@@ -1,19 +1,20 @@
 from argparse import Namespace
 
 import lib.services.database as database_service
+from lib.services.database import DatabaseConfiguration
 
 
 def cmd_database_add(args: Namespace) -> None:
     try:
-        database_service.add(
+        database_service.add(DatabaseConfiguration(
             name=args.name,
-            db_type=args.db_type,
+            type=args.db_type,
             username=args.username,
             password=args.password,
             host=args.host,
             port=args.port,
             dbname=args.dbname,
-        )
+        ))
         print(f"Database '{args.name}' added.")
     except ValueError as e:
         print(e)

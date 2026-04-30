@@ -4,7 +4,8 @@ from unittest.mock import MagicMock, patch
 
 import lib.services.collection as collection_service
 import lib.services.database as database_service
-from lib.services.collection import CollectionNotFoundError, DatabaseNotFoundError
+from lib.services.collection import CollectionConfiguration, CollectionNotFoundError, DatabaseNotFoundError
+from lib.services.database import DatabaseConfiguration
 
 
 def _seed_collection(**overrides) -> dict:
@@ -15,13 +16,13 @@ def _seed_collection(**overrides) -> dict:
         start="2024-01-01T00:00:00",
     )
     defaults.update(overrides)
-    return collection_service.add(**defaults)
+    return collection_service.add(CollectionConfiguration(**defaults))
 
 
 def _seed_database(**overrides) -> dict:
     defaults = dict(
         name="local",
-        db_type="postgres",
+        type="postgres",
         username="user",
         password="pass",
         host="localhost",
@@ -29,17 +30,17 @@ def _seed_database(**overrides) -> dict:
         dbname="mydb",
     )
     defaults.update(overrides)
-    return database_service.add(**defaults)
+    return database_service.add(DatabaseConfiguration(**defaults))
 
 
 def test_add_returns_entry(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    entry = collection_service.add(
+    entry = collection_service.add(CollectionConfiguration(
         name="bars",
         database="local",
         type="historical-bars",
         start="2024-01-01T00:00:00",
-    )
+    ))
     assert entry["name"] == "bars"
     assert entry["database"] == "local"
     assert entry["type"] == "historical-bars"
@@ -48,26 +49,26 @@ def test_add_returns_entry(tmp_path, monkeypatch):
 
 def test_add_omits_optional_fields_when_absent(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    entry = collection_service.add(
+    entry = collection_service.add(CollectionConfiguration(
         name="bars",
         database="local",
         type="historical-bars",
         start="2024-01-01T00:00:00",
-    )
+    ))
     assert "frequency" not in entry
     assert "end" not in entry
 
 
 def test_add_includes_optional_fields_when_provided(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    entry = collection_service.add(
+    entry = collection_service.add(CollectionConfiguration(
         name="bars",
         database="local",
         type="historical-bars",
         start="2024-01-01T00:00:00",
         frequency="1m",
         end="2024-06-01T00:00:00",
-    )
+    ))
     assert entry["frequency"] == "1m"
     assert entry["end"] == "2024-06-01T00:00:00"
 

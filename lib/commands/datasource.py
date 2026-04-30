@@ -1,16 +1,17 @@
 from argparse import Namespace
 
 import lib.services.datasource as datasource_service
+from lib.services.datasource import DatasourceConfiguration
 
 
 def cmd_datasource_add(args: Namespace) -> None:
     try:
-        datasource_service.add(
+        datasource_service.add(DatasourceConfiguration(
             name=args.name,
-            datasource_type=args.datasource_type,
+            type=args.datasource_type,
             api_key=args.api_key,
             api_secret=args.api_secret,
-        )
+        ))
         print(f"Datasource '{args.name}' added.")
     except ValueError as e:
         print(e)

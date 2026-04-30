@@ -4,22 +4,25 @@ import yaml
 from unittest.mock import MagicMock, patch
 
 import lib.services.datasource as datasource_service
+from lib.services.datasource import DatasourceConfiguration
 
 
 def _seed(**overrides) -> dict:
     defaults = dict(
         name="alpaca-prod",
-        datasource_type="alpaca",
+        type="alpaca",
         api_key="key123",
         api_secret="secret456",
     )
     defaults.update(overrides)
-    return datasource_service.add(**defaults)
+    return datasource_service.add(DatasourceConfiguration(**defaults))
 
 
 def test_add_returns_entry(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    entry = datasource_service.add("alpaca-prod", "alpaca", "key123", "secret456")
+    entry = datasource_service.add(DatasourceConfiguration(
+        name="alpaca-prod", type="alpaca", api_key="key123", api_secret="secret456"
+    ))
     assert entry["name"] == "alpaca-prod"
     assert entry["type"] == "alpaca"
     assert entry["api_key"] == "key123"

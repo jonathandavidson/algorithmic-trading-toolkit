@@ -2,9 +2,7 @@ import requests
 
 from lib.services.configuration import ConfigurationService
 
-_config = ConfigurationService()
-
-_TYPE = "datasources"
+_config = ConfigurationService("datasources")
 _TEST_URLS = {
     "alpaca": "https://data.alpaca.markets/v1beta3/crypto/us/bars",
 }
@@ -17,19 +15,19 @@ def add(name: str, datasource_type: str, api_key: str, api_secret: str) -> dict:
         "api_key": api_key,
         "api_secret": api_secret,
     }
-    return _config.add(_TYPE, name, entry)
+    return _config.add(name, entry)
 
 
 def list() -> list[dict]:
-    return _config.list(_TYPE, "name")
+    return _config.list("name")
 
 
 def remove(name: str) -> str:
-    return _config.remove(_TYPE, name)
+    return _config.remove(name)
 
 
 def test(name: str) -> str:
-    datasources = _config.list(_TYPE, "name")
+    datasources = _config.list("name")
     ds = next((d for d in datasources if d["name"] == name), None)
     if ds is None:
         raise KeyError(name)

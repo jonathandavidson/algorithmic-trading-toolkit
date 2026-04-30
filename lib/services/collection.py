@@ -5,13 +5,12 @@ from sqlalchemy.orm import Session
 
 from lib.services.configuration import ConfigurationService
 from lib.utils.database import get_engine
-
-_config = ConfigurationService()
 from lib.models.base import Base
 from lib.models.historical_bars import HistoricalBar
 import lib.models.historical_bars  # registers HistoricalBar with Base.metadata
 
-_TYPE = "collections"
+_config = ConfigurationService("collections")
+_db_config = ConfigurationService("databases")
 
 
 class CollectionNotFoundError(LookupError):
@@ -23,14 +22,14 @@ class DatabaseNotFoundError(LookupError):
 
 
 def _find_collection(name: str) -> dict:
-    collection = next((c for c in _config.list(_TYPE, "name") if c["name"] == name), None)
+    collection = next((c for c in _config.list("name") if c["name"] == name), None)
     if collection is None:
         raise CollectionNotFoundError(name)
     return collection
 
 
 def _find_database(collection: dict) -> dict:
-    db = next((d for d in _config.list("databases", "name") if d["name"] == collection["database"]), None)
+    db = next((d for d in _db_config.list("name") if d["name"] == collection["database"]), None)
     if db is None:
         raise DatabaseNotFoundError(collection["database"])
     return db
@@ -47,16 +46,16 @@ def add(name: str, database: str, type: str, start: str, frequency: str | None =
         entry["frequency"] = frequency
     if end is not None:
         entry["end"] = end
-    return _config.add(_TYPE, name, entry)
+    return _config.add(name, entry)
 
 
 def list() -> list[dict]:
-    return _config.list(_TYPE, "name")
+    return _config.list("name")
 
 
 def remove(name: str) -> str:
     try:
-        return _config.remove(_TYPE, name)
+        return _config.remove(name)
     except KeyError:
         raise CollectionNotFoundError(name)
 

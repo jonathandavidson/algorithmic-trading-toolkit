@@ -3,8 +3,8 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
-from lib.config import load_config, save_config
-from lib.database import get_engine
+from lib.utils.config import load_config, save_config
+from lib.utils.database import get_engine
 from lib.models.base import Base
 from lib.models.historical_bars import HistoricalBar
 import lib.models.historical_bars  # registers HistoricalBar with Base.metadata

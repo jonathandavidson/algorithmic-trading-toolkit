@@ -167,7 +167,7 @@ def test_cmd_database_test_success(tmp_path, monkeypatch, capsys):
     cmd_database_add(_make_db_args(name="mydb"))
     capsys.readouterr()
 
-    with patch("lib.database.create_engine", return_value=MagicMock()):
+    with patch("lib.utils.database.create_engine", return_value=MagicMock()):
         cmd_database_test(argparse.Namespace(name="mydb"))
 
     assert "successful" in capsys.readouterr().out
@@ -180,7 +180,7 @@ def test_cmd_database_test_failure(tmp_path, monkeypatch, capsys):
 
     mock_engine = MagicMock()
     mock_engine.connect.side_effect = Exception("connection refused")
-    with patch("lib.database.create_engine", return_value=mock_engine):
+    with patch("lib.utils.database.create_engine", return_value=mock_engine):
         cmd_database_test(argparse.Namespace(name="mydb"))
 
     out = capsys.readouterr().out
@@ -193,7 +193,7 @@ def test_cmd_database_test_postgres_alias(tmp_path, monkeypatch, capsys):
     cmd_database_add(_make_db_args(name="mydb", db_type="postgres"))
     capsys.readouterr()
 
-    with patch("lib.database.create_engine", return_value=MagicMock()) as mock_create:
+    with patch("lib.utils.database.create_engine", return_value=MagicMock()) as mock_create:
         cmd_database_test(argparse.Namespace(name="mydb"))
 
     url = mock_create.call_args[0][0]

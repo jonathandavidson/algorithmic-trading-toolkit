@@ -1,5 +1,5 @@
-from lib.config import load_config, save_config
-from lib.database import connect
+from lib.utils.config import load_config, save_config
+from lib.utils.database import connect
 
 
 def add(name: str, db_type: str, username: str, password: str, host: str, port: int, dbname: str) -> dict:

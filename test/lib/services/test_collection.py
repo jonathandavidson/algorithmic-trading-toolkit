@@ -124,7 +124,7 @@ def test_init_returns_name(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     _seed_database(name="local")
     _seed_collection(name="bars", database="local")
-    with patch("lib.database.create_engine", return_value=MagicMock()):
+    with patch("lib.utils.database.create_engine", return_value=MagicMock()):
         with patch("lib.models.base.Base.metadata"):
             assert collection_service.init("bars") == "bars"
 
@@ -146,7 +146,7 @@ def test_init_drops_and_creates_tables(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     _seed_database(name="local")
     _seed_collection(name="bars", database="local")
-    with patch("lib.database.create_engine", return_value=MagicMock()):
+    with patch("lib.utils.database.create_engine", return_value=MagicMock()):
         with patch("lib.models.base.Base.metadata") as mock_meta:
             collection_service.init("bars")
     assert mock_meta.drop_all.called
@@ -170,7 +170,7 @@ def test_run_returns_inserted_count(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     _seed_database(name="local")
     _seed_collection(name="bars", database="local")
-    with patch("lib.database.create_engine", return_value=MagicMock()):
+    with patch("lib.utils.database.create_engine", return_value=MagicMock()):
         with patch("lib.services.collection.Session") as mock_session_cls:
             mock_session_cls.return_value.__enter__.return_value = MagicMock()
             count = collection_service.run("bars")

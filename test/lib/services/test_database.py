@@ -94,7 +94,7 @@ def test_remove_raises_on_not_found(tmp_path, monkeypatch):
 def test_test_returns_name_on_success(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     _seed_db(tmp_path, name="mydb")
-    with patch("lib.database.create_engine", return_value=MagicMock()):
+    with patch("lib.utils.database.create_engine", return_value=MagicMock()):
         result = database_service.test("mydb")
     assert result == "mydb"
 
@@ -110,7 +110,7 @@ def test_test_raises_on_connection_failure(tmp_path, monkeypatch):
     _seed_db(tmp_path, name="mydb")
     mock_engine = MagicMock()
     mock_engine.connect.side_effect = Exception("connection refused")
-    with patch("lib.database.create_engine", return_value=mock_engine):
+    with patch("lib.utils.database.create_engine", return_value=mock_engine):
         with pytest.raises(Exception, match="connection refused"):
             database_service.test("mydb")
 
@@ -118,7 +118,7 @@ def test_test_raises_on_connection_failure(tmp_path, monkeypatch):
 def test_test_postgres_alias(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     _seed_db(tmp_path, name="mydb", db_type="postgres")
-    with patch("lib.database.create_engine", return_value=MagicMock()) as mock_create:
+    with patch("lib.utils.database.create_engine", return_value=MagicMock()) as mock_create:
         database_service.test("mydb")
     url = mock_create.call_args[0][0]
     assert url.drivername == "postgresql"

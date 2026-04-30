@@ -1,6 +1,6 @@
 import requests
 
-from lib.config import load_config, save_config
+from lib.utils.config import load_config, save_config
 
 _TEST_URLS = {
     "alpaca": "https://data.alpaca.markets/v1beta3/crypto/us/bars",

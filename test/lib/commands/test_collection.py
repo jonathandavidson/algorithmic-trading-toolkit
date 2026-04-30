@@ -216,7 +216,7 @@ def test_cmd_collection_init_found_produces_no_error(tmp_path, monkeypatch, caps
     cmd_collection_add(_make_collection_args(name="bars", database="local"))
     capsys.readouterr()
     monkeypatch.setattr("builtins.input", lambda _: "y")
-    with patch("lib.database.create_engine", return_value=MagicMock()):
+    with patch("lib.utils.database.create_engine", return_value=MagicMock()):
         with patch("lib.models.base.Base.metadata"):
             cmd_collection_init(argparse.Namespace(name="bars"))
     assert "not found" not in capsys.readouterr().out

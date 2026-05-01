@@ -2,7 +2,7 @@ import pytest
 import yaml
 from unittest.mock import MagicMock, patch
 
-from lib.services.database import DatabaseConfiguration, DatabaseConfigurationService
+from lib.services.configuration.database import DatabaseConfiguration, DatabaseConfigurationService
 
 database_service = DatabaseConfigurationService()
 

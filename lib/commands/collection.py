@@ -1,7 +1,7 @@
 from argparse import Namespace
 
-from lib.services.collection import CollectionConfiguration, CollectionConfigurationService, CollectionNotFoundError, DatabaseNotFoundError
-from lib.services.database import DatabaseConfigurationService
+from lib.services.configuration.collection import CollectionConfiguration, CollectionConfigurationService, CollectionNotFoundError, DatabaseNotFoundError
+from lib.services.configuration.database import DatabaseConfigurationService
 
 _service = CollectionConfigurationService()
 _db_service = DatabaseConfigurationService()

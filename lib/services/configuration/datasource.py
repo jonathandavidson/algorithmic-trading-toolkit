@@ -2,9 +2,9 @@ from dataclasses import dataclass
 
 import requests
 
-from lib.services.configuration import ConfigurationService
-from lib.services.interface.config_service import ConfigServiceInterface
-from lib.services.interface.configuration_type import ConfigurationTypeInterface
+from lib.services.configuration.configuration import ConfigurationService
+from lib.services.configuration.interface.config_service import ConfigServiceInterface
+from lib.services.configuration.interface.configuration_type import ConfigurationTypeInterface
 
 _TEST_URLS = {
     "alpaca": "https://data.alpaca.markets/v1beta3/crypto/us/bars",

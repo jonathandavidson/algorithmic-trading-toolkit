@@ -1,6 +1,6 @@
 from argparse import Namespace
 
-from lib.services.database import DatabaseConfiguration, DatabaseConfigurationService
+from lib.services.configuration.database import DatabaseConfiguration, DatabaseConfigurationService
 
 _service = DatabaseConfigurationService()
 

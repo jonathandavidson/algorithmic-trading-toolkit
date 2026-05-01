@@ -1,9 +1,9 @@
 import dataclasses
 from dataclasses import dataclass
 
-from lib.services.configuration import ConfigurationService
-from lib.services.interface.config_service import ConfigServiceInterface
-from lib.services.interface.configuration_type import ConfigurationTypeInterface
+from lib.services.configuration.configuration import ConfigurationService
+from lib.services.configuration.interface.config_service import ConfigServiceInterface
+from lib.services.configuration.interface.configuration_type import ConfigurationTypeInterface
 from lib.utils.database import connect
 
 

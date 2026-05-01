@@ -5,10 +5,10 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
-from lib.services.configuration import ConfigurationService
-from lib.services.database import DatabaseConfiguration
-from lib.services.interface.config_service import ConfigServiceInterface
-from lib.services.interface.configuration_type import ConfigurationTypeInterface
+from lib.services.configuration.configuration import ConfigurationService
+from lib.services.configuration.database import DatabaseConfiguration
+from lib.services.configuration.interface.config_service import ConfigServiceInterface
+from lib.services.configuration.interface.configuration_type import ConfigurationTypeInterface
 from lib.utils.database import get_engine
 from lib.models.base import Base
 from lib.models.historical_bars import HistoricalBar

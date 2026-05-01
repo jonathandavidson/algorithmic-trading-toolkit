@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from lib.services.interface.configuration_type import ConfigurationTypeInterface
+from lib.services.configuration.interface.configuration_type import ConfigurationTypeInterface
 
 
 class ConfigServiceInterface(ABC):

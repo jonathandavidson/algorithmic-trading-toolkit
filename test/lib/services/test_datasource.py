@@ -3,7 +3,7 @@ import requests
 import yaml
 from unittest.mock import MagicMock, patch
 
-from lib.services.datasource import DatasourceConfiguration, DatasourceConfigurationService
+from lib.services.configuration.datasource import DatasourceConfiguration, DatasourceConfigurationService
 
 datasource_service = DatasourceConfigurationService()
 
@@ -105,7 +105,7 @@ def test_test_returns_name_on_success(tmp_path, monkeypatch):
     _seed(name="alpaca-prod")
     mock_response = MagicMock()
     mock_response.raise_for_status.return_value = None
-    with patch("lib.services.datasource.requests.get", return_value=mock_response):
+    with patch("lib.services.configuration.datasource.requests.get", return_value=mock_response):
         assert datasource_service.test("alpaca-prod") == "alpaca-prod"
 
 
@@ -120,7 +120,7 @@ def test_test_raises_on_http_error(tmp_path, monkeypatch):
     _seed(name="alpaca-prod")
     mock_response = MagicMock()
     mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError("401 Unauthorized")
-    with patch("lib.services.datasource.requests.get", return_value=mock_response):
+    with patch("lib.services.configuration.datasource.requests.get", return_value=mock_response):
         with pytest.raises(requests.exceptions.HTTPError):
             datasource_service.test("alpaca-prod")
 
@@ -130,7 +130,7 @@ def test_test_sends_correct_request(tmp_path, monkeypatch):
     _seed(name="alpaca-prod", api_key="mykey", api_secret="mysecret")
     mock_response = MagicMock()
     mock_response.raise_for_status.return_value = None
-    with patch("lib.services.datasource.requests.get", return_value=mock_response) as mock_post:
+    with patch("lib.services.configuration.datasource.requests.get", return_value=mock_response) as mock_post:
         datasource_service.test("alpaca-prod")
     mock_post.assert_called_once_with(
         "https://data.alpaca.markets/v1beta3/crypto/us/bars",

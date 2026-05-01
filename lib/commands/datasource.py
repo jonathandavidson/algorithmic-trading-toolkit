@@ -1,6 +1,6 @@
 from argparse import Namespace
 
-from lib.services.datasource import DatasourceConfiguration, DatasourceConfigurationService
+from lib.services.configuration.datasource import DatasourceConfiguration, DatasourceConfigurationService
 
 _service = DatasourceConfigurationService()
 

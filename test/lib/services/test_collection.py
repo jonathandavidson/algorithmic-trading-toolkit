@@ -2,8 +2,8 @@ import pytest
 import yaml
 from unittest.mock import MagicMock, patch
 
-from lib.services.collection import CollectionConfiguration, CollectionConfigurationService, CollectionNotFoundError, DatabaseNotFoundError
-from lib.services.database import DatabaseConfiguration, DatabaseConfigurationService
+from lib.services.configuration.collection import CollectionConfiguration, CollectionConfigurationService, CollectionNotFoundError, DatabaseNotFoundError
+from lib.services.configuration.database import DatabaseConfiguration, DatabaseConfigurationService
 
 collection_service = CollectionConfigurationService()
 database_service = DatabaseConfigurationService()
@@ -173,7 +173,7 @@ def test_run_returns_inserted_count(tmp_path, monkeypatch):
     _seed_database(name="local")
     _seed_collection(name="bars", database="local")
     with patch("lib.utils.database.create_engine", return_value=MagicMock()):
-        with patch("lib.services.collection.Session") as mock_session_cls:
+        with patch("lib.services.configuration.collection.Session") as mock_session_cls:
             mock_session_cls.return_value.__enter__.return_value = MagicMock()
             count = collection_service.run("bars")
     assert count == 3

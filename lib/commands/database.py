@@ -27,11 +27,10 @@ def cmd_database_list(args: Namespace) -> None:
         print("No databases configured.")
         return
     for db in databases:
-        default_flag = "  default=true" if db.default else ""
         print(
             f"name={db.name}  type={db.type}  host={db.host}  "
             f"port={db.port}  dbname={db.dbname}  "
-            f"username={db.username}  password=********{default_flag}"
+            f"username={db.username}  password=********"
         )
 
 

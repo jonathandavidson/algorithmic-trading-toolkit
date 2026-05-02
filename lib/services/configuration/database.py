@@ -16,12 +16,9 @@ class DatabaseConfiguration(ConfigurationTypeInterface):
     host: str
     port: int
     dbname: str
-    default: bool = False
 
     def to_dict(self) -> dict:
         d = dataclasses.asdict(self)
-        if not d["default"]:
-            del d["default"]
         return d
 
 
@@ -31,9 +28,6 @@ class DatabaseConfigurationService(ConfigServiceInterface):
         self._config = ConfigurationService("databases", DatabaseConfiguration)
 
     def add(self, configuration: DatabaseConfiguration) -> DatabaseConfiguration:  # type: ignore[override]
-        is_first = len(self._config.list("name")) == 0
-        if is_first:
-            configuration = dataclasses.replace(configuration, default=True)
         return self._config.add(configuration)  # type: ignore[return-value]
 
     def list(self, name: str = "name") -> list[DatabaseConfiguration]:  # type: ignore[override]

@@ -35,19 +35,6 @@ def test_add_returns_entry(tmp_path, monkeypatch):
     assert entry.dbname == "mydb"
 
 
-def test_add_first_entry_is_default(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-    entry = database_service.add(_make(name="first"))
-    assert entry.default is True
-
-
-def test_add_second_entry_not_default(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-    database_service.add(_make(name="first"))
-    entry = database_service.add(_make(name="second"))
-    assert not entry.default
-
-
 def test_add_persists_to_config(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     database_service.add(_make())

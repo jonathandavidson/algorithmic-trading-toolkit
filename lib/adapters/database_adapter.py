@@ -16,7 +16,7 @@ class DatabaseAdapter:
         return get_engine(self._config.to_dict())
     
     def init_database(self):
-        engine = self.get_engine()
+        engine = self._get_engine()
         Base.metadata.drop_all(engine)
         Base.metadata.create_all(engine)
 

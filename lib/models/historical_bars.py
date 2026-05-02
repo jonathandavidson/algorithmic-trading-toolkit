@@ -9,6 +9,10 @@ from lib.models.base import Base, CommonMixin
 class HistoricalBar(CommonMixin, Base):
     __tablename__ = "historical_bars"
 
+    @classmethod
+    def from_dict(cls, data: dict) -> 'HistoricalBar':
+        return cls(**data)
+
     symbol: Mapped[str] = mapped_column(String)
     time: Mapped[DateTime] = mapped_column(DateTime(timezone=True))
     open: Mapped[Numeric] = mapped_column(Numeric(12, 4))

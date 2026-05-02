@@ -1,13 +1,13 @@
 import requests
 import json
 
-from sqlalchemy.util import symbol
-
 from lib.services.configuration.datasource import DatasourceConfiguration
 from lib.models.historical_bars import HistoricalBar
 
 
-_TEST_URL = 'https://data.alpaca.markets/v1beta3/crypto/us/bars'
+_TEST_URLS = {
+    'alpaca': 'https://data.alpaca.markets/v1beta3/crypto/us/bars',
+}
 
 _MOCK_RESPONSE_DATA = '''
     {
@@ -59,13 +59,12 @@ class DatasourceAdapter:
     def fetch_historical_bars(self) -> list[HistoricalBar]:
         response_data = json.loads(_MOCK_RESPONSE_DATA)
         bars = []
-        for symbol, value in response_data['bars']:
-            if symbol != 'next_page_token':
-                bars.extend([self._convert_to_model({ **bar_data, 'symbol': symbol }) for bar_data in response_data['bars'][symbol]])
+        for symbol, bars_data in response_data['bars'].items():
+            bars.extend([self._convert_to_model({**bar_data, 'symbol': symbol}) for bar_data in bars_data])
         return bars
-    
+
     def test_connection(self) -> bool:
-        url = _TEST_URL[self._config.type]
+        url = _TEST_URLS[self._config.type]
         response = requests.get(
             url,
             auth=(self._config.api_key, self._config.api_secret),

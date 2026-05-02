@@ -32,6 +32,7 @@ class CollectionConfiguration(ConfigurationTypeInterface):
     database: str
     type: str
     start: str
+    datasource: str | None = None
     frequency: str | None = None
     end: str | None = None
 

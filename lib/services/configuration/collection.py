@@ -22,6 +22,9 @@ class CollectionNotFoundError(LookupError):
 class DatabaseNotFoundError(LookupError):
     pass
 
+class DatasourceNotFoundError(LookupError):
+    pass
+
 
 @dataclass
 class CollectionConfiguration(ConfigurationTypeInterface):

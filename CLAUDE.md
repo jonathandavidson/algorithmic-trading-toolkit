@@ -42,6 +42,10 @@ Coverage runs automatically via `setup.cfg` and reports missing lines.
 
 `cli.py` is the single entrypoint. It uses Python's `argparse` with subparsers — each subcommand has a dedicated `cmd_<name>` handler function and is registered in `build_parser()`. `main()` dispatches to the handler via `args.func(args)`.
 
+## Test structure
+
+Unit tests live under `test/` and mirror the source folder and file structure. For a source file at `lib/a/b/foo.py`, the corresponding test file is `test/lib/a/b/test_foo.py`. Each directory under `test/` must have an `__init__.py`.
+
 ## Type hints
 
 Use type hints for all new Python code — function parameters, return types, and variables where the type is not immediately obvious.

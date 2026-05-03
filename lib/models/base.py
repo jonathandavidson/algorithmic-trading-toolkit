@@ -12,5 +12,5 @@ class CommonMixin:
     source: Mapped[Optional[str]] = mapped_column(String)
 
 
-class Base(DeclarativeBase):
+class BaseModel(DeclarativeBase):
     pass

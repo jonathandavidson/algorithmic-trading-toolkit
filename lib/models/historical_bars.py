@@ -3,10 +3,10 @@ from typing import Optional
 from sqlalchemy import BigInteger, DateTime, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from lib.models.base import Base, CommonMixin
+from lib.models.base import BaseModel, CommonMixin
 
 
-class HistoricalBar(CommonMixin, Base):
+class HistoricalBar(CommonMixin, BaseModel):
     __tablename__ = "historical_bars"
 
     @classmethod

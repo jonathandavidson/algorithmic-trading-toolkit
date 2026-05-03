@@ -19,7 +19,7 @@ def test_init_database_drops_and_creates_tables():
     adapter = DatabaseAdapter(_make_config())
     mock_engine = MagicMock()
     with patch("lib.adapters.database_adapter.get_engine", return_value=mock_engine):
-        with patch("lib.adapters.database_adapter.Base.metadata") as mock_meta:
+        with patch("lib.adapters.database_adapter.BaseModel.metadata") as mock_meta:
             adapter.init_database()
     mock_meta.drop_all.assert_called_once_with(mock_engine)
     mock_meta.create_all.assert_called_once_with(mock_engine)
@@ -45,7 +45,7 @@ def test_test_connection_passes_config_to_engine():
     assert call_arg["dbname"] == "prod"
 
 
-def test_insert_historical_bars_adds_all_and_commits():
+def test_insert_rows_adds_all_and_commits():
     adapter = DatabaseAdapter(_make_config())
     mock_session = MagicMock()
     bars = [MagicMock(), MagicMock()]
@@ -53,18 +53,18 @@ def test_insert_historical_bars_adds_all_and_commits():
         with patch("lib.adapters.database_adapter.Session") as mock_session_cls:
             mock_session_cls.return_value.__enter__ = MagicMock(return_value=mock_session)
             mock_session_cls.return_value.__exit__ = MagicMock(return_value=False)
-            adapter.insert_historical_bars(bars)
+            adapter.insert_rows(bars)
     mock_session.add_all.assert_called_once_with(bars)
     mock_session.commit.assert_called_once()
 
 
-def test_insert_historical_bars_with_empty_list():
+def test_insert_rows_with_empty_list():
     adapter = DatabaseAdapter(_make_config())
     mock_session = MagicMock()
     with patch("lib.adapters.database_adapter.get_engine", return_value=MagicMock()):
         with patch("lib.adapters.database_adapter.Session") as mock_session_cls:
             mock_session_cls.return_value.__enter__ = MagicMock(return_value=mock_session)
             mock_session_cls.return_value.__exit__ = MagicMock(return_value=False)
-            adapter.insert_historical_bars([])
+            adapter.insert_rows([])
     mock_session.add_all.assert_called_once_with([])
     mock_session.commit.assert_called_once()

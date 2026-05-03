@@ -2,7 +2,7 @@ from lib.services.configuration.collection import CollectionConfiguration, Datab
 from lib.services.configuration.database import DatabaseConfigurationService, DatabaseConfiguration
 from lib.services.configuration.datasource import DatasourceConfigurationService, DatasourceConfiguration
 from lib.adapters.database_adapter import DatabaseAdapter
-from lib.adapters.datasource_adapter import DatasourceAdapter
+from lib.adapters.factory.datasource_adapter_factory import DatasourceAdapterFactory
 from lib.orchestrators.collection_orchestrator import CollectionOrchestrator
 
 
@@ -27,7 +27,7 @@ class CollectionRunnerService:
 
     def _build_collection_orchestrator(self, database_config: DatabaseConfiguration, datasource_config: DatasourceConfiguration) -> CollectionOrchestrator:
         db_adapter = DatabaseAdapter(database_config)
-        datasource_adapter = DatasourceAdapter(datasource_config)
+        datasource_adapter = DatasourceAdapterFactory.create_adapter(datasource_config)
         return CollectionOrchestrator(db_adapter, datasource_adapter)
 
     def init_collection(self) -> str:

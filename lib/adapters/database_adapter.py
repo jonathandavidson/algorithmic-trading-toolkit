@@ -2,8 +2,8 @@ from sqlalchemy.orm import Session
 
 from lib.utils.database import get_engine
 from lib.services.configuration.database import DatabaseConfiguration
-from lib.models.base import Base
-from lib.models.historical_bars import HistoricalBar
+from lib.models.base import BaseModel
+from lib.models.historical_bars import BaseModel
 
 
 class DatabaseInsertError(Exception):
@@ -22,8 +22,8 @@ class DatabaseAdapter:
     
     def init_database(self):
         engine = self._get_engine()
-        Base.metadata.drop_all(engine)
-        Base.metadata.create_all(engine)
+        BaseModel.metadata.drop_all(engine)
+        BaseModel.metadata.create_all(engine)
 
     def test_connection(self) -> bool:
         engine = self._get_engine()
@@ -31,7 +31,7 @@ class DatabaseAdapter:
             connection.execute("SELECT 1")
         return True
 
-    def insert_historical_bars(self, bars: list[HistoricalBar]):
+    def insert_rows(self, bars: list[BaseModel]):
         engine = self._get_engine()
         with Session(engine) as session:
             session.add_all(bars)

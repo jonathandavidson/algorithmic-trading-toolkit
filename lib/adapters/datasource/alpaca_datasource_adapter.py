@@ -1,15 +1,9 @@
-import requests
 import json
+import requests
 
+from lib.adapters.interfaces.datasource_adapter_interface import DatasourceAdapterInterface
 from lib.services.configuration.datasource import DatasourceConfiguration
 from lib.models.historical_bars import HistoricalBar
-
-
-class DatasourceNotFoundError(LookupError):
-    pass
-
-class DatasourceFetchError(Exception):
-    pass
 
 
 _TEST_URLS = {
@@ -46,12 +40,12 @@ _MOCK_RESPONSE_DATA = '''
     }
 '''
 
-class DatasourceAdapter:
 
+class AlpacaDatasourceAdapter(DatasourceAdapterInterface):
     def __init__(self, config: DatasourceConfiguration):
         self._config = config
 
-    def _convert_to_model(self, data: dict) -> HistoricalBar:
+    def convert_to_model(self, data: dict) -> HistoricalBar:
         bar_dict = {
             'symbol': data['symbol'],
             'time': data['t'],
@@ -65,14 +59,14 @@ class DatasourceAdapter:
             'source': self._config.type
         }
         return HistoricalBar.from_dict(bar_dict)
-
-    def fetch_historical_bars(self) -> list[HistoricalBar]:
+    
+    def fetch_rows(self) -> list[HistoricalBar]:
         response_data = json.loads(_MOCK_RESPONSE_DATA)
         bars = []
         for symbol, bars_data in response_data['bars'].items():
-            bars.extend([self._convert_to_model({**bar_data, 'symbol': symbol}) for bar_data in bars_data])
+            bars.extend([self.convert_to_model({**bar_data, 'symbol': symbol}) for bar_data in bars_data])
         return bars
-
+    
     def test_connection(self) -> bool:
         url = _TEST_URLS[self._config.type]
         response = requests.get(

@@ -24,6 +24,8 @@ def test_convert_to_model_maps_fields():
         'l': 90.0,
         'c': 105.0,
         'v': 1.5,
+        "n": 4,
+        "vw": 29001
     }
     bar = adapter._convert_to_model(data)
     assert isinstance(bar, HistoricalBar)
@@ -33,6 +35,8 @@ def test_convert_to_model_maps_fields():
     assert bar.low == 90.0
     assert bar.close == 105.0
     assert bar.volume == 1.5
+    assert bar.trade_count == 4
+    assert bar.volume_weighted_avg_price == 29001
 
 
 def test_fetch_historical_bars_returns_all_bars():

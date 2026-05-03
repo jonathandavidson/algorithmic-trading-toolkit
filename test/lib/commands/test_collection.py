@@ -5,6 +5,7 @@ import yaml
 
 from lib.commands.collection import cmd_collection_add, cmd_collection_init, cmd_collection_list, cmd_collection_remove
 from lib.commands.database import cmd_database_add
+from lib.commands.datasource import cmd_datasource_add
 
 
 def _make_db_args(**overrides) -> argparse.Namespace:
@@ -21,10 +22,22 @@ def _make_db_args(**overrides) -> argparse.Namespace:
     return argparse.Namespace(**defaults)
 
 
+def _make_datasource_args(**overrides) -> argparse.Namespace:
+    defaults = dict(
+        name="tesdc",
+        datasource_type="alpaca",
+        api_key="test_key",
+        api_secret="test_secret",
+    )
+    defaults.update(overrides)
+    return argparse.Namespace(**defaults)
+
+
 def _make_collection_args(**overrides) -> argparse.Namespace:
     defaults = dict(
         name="bars",
         database="local",
+        datasource="tesdc",
         type="historical-bars",
         frequency=None,
         start="2024-01-01T00:00:00",
@@ -128,7 +141,7 @@ def test_cmd_collection_list_shows_entries(tmp_path, monkeypatch, capsys):
 def test_cmd_collection_list_shows_all_required_fields(tmp_path, monkeypatch, capsys):
     monkeypatch.chdir(tmp_path)
     cmd_collection_add(_make_collection_args(
-        name="bars", database="local", type="historical-bars", start="2024-01-01T00:00:00"
+        name="bars", database="local", datasource="tesdc", type="historical-bars", start="2024-01-01T00:00:00"
     ))
     capsys.readouterr()
 
@@ -136,6 +149,7 @@ def test_cmd_collection_list_shows_all_required_fields(tmp_path, monkeypatch, ca
     out = capsys.readouterr().out
     assert "name=bars" in out
     assert "database=local" in out
+    assert "datasource=tesdc" in out
     assert "type=historical-bars" in out
     assert "start=2024-01-01T00:00:00" in out
 
@@ -213,7 +227,8 @@ def test_cmd_collection_init_not_found(tmp_path, monkeypatch, capsys):
 def test_cmd_collection_init_found_produces_no_error(tmp_path, monkeypatch, capsys):
     monkeypatch.chdir(tmp_path)
     cmd_database_add(_make_db_args(name="local"))
-    cmd_collection_add(_make_collection_args(name="bars", database="local"))
+    cmd_datasource_add(_make_datasource_args(name="testdc"))
+    cmd_collection_add(_make_collection_args(name="bars", database="local", datasource="testdc"))
     capsys.readouterr()
     monkeypatch.setattr("builtins.input", lambda _: "y")
     with patch("lib.utils.database.create_engine", return_value=MagicMock()):

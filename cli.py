@@ -80,6 +80,7 @@ def build_parser():
     collection_add = collection_subparsers.add_parser("add", help="add a collection")
     collection_add.add_argument("--name", required=True, help="collection name")
     collection_add.add_argument("--database", required=True, help="database name")
+    collection_add.add_argument("--datasource", required=True, help="datasource name")
     collection_add.add_argument("--type", required=True, choices=["historical-bars"], help="collection type")
     collection_add.add_argument("--frequency", choices=["1m", "1d"], help="data frequency")
     collection_add.add_argument("--start", required=True, type=_iso8601, help="start datetime (ISO 8601)")

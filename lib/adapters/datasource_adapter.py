@@ -5,6 +5,13 @@ from lib.services.configuration.datasource import DatasourceConfiguration
 from lib.models.historical_bars import HistoricalBar
 
 
+class DatasourceNotFoundError(LookupError):
+    pass
+
+class DatasourceFetchError(Exception):
+    pass
+
+
 _TEST_URLS = {
     'alpaca': 'https://data.alpaca.markets/v1beta3/crypto/us/bars',
 }
@@ -53,6 +60,9 @@ class DatasourceAdapter:
             'low': data['l'],
             'close': data['c'],
             'volume': data['v'],
+            'trade_count': data['n'],
+            'volume_weighted_avg_price': data['vw'],
+            'source': self._config.type
         }
         return HistoricalBar.from_dict(bar_dict)
 

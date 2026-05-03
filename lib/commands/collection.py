@@ -12,6 +12,7 @@ def cmd_collection_add(args: Namespace) -> None:
         _service.add(CollectionConfiguration(
             name=args.name,
             database=args.database,
+            datasource=args.datasource,
             type=args.type,
             start=args.start,
             frequency=args.frequency,
@@ -30,8 +31,9 @@ def cmd_collection_list(args: Namespace) -> None:
     for c in collections:
         parts = [
             f"name={c.name}",
-            f"database={c.database}",
             f"type={c.type}",
+            f"database={c.database}",
+            f"datasource={c.datasource}",
             f"start={c.start}",
         ]
         if c.frequency is not None:
@@ -81,6 +83,8 @@ def cmd_collection_run(args: Namespace) -> None:
         print(f"Collection '{args.name}' not found.")
     except DatabaseNotFoundError as e:
         print(f"Database '{e.args[0]}' not found.")
+    except Exception as e:
+        print(f"Error running collection: {str(e)}")
 
 
 def cmd_collection(args: Namespace) -> None:

@@ -1,5 +1,5 @@
-from lib.adapters.database_adapter import DatabaseAdapter
-from lib.adapters.datasource_adapter import DatasourceAdapter
+from lib.adapters.database_adapter import DatabaseAdapter, DatabaseInsertError
+from lib.adapters.datasource_adapter import DatasourceAdapter, DatasourceFetchError
 from lib.models.historical_bars import HistoricalBar
 
 
@@ -16,6 +16,12 @@ class CollectionOrchestrator:
         self._db_adapter.init_database()
 
     def run_collection(self) -> int:
-        bars: HistoricalBar = self._datasource_adapter.fetch_historical_bars()
-        self._db_adapter.insert_historical_bars(bars)
+        try:
+            bars: HistoricalBar = self._datasource_adapter.fetch_historical_bars()
+        except Exception as e:
+            raise DatasourceFetchError('Error fetching from data source: ' + str(e)) from e
+        try:
+            self._db_adapter.insert_historical_bars(bars)
+        except Exception as e:
+            raise DatabaseInsertError(str(e)) from e
         return len(bars)

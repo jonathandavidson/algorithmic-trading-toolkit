@@ -2,7 +2,7 @@ import pytest
 import yaml
 from unittest.mock import MagicMock, patch
 
-from lib.services.configuration.collection import CollectionConfiguration, CollectionConfigurationService, CollectionNotFoundError, DatabaseNotFoundError
+from lib.services.configuration.collection import CollectionConfiguration, CollectionConfigurationService, CollectionNotFoundError, DatabaseNotFoundError, DatasourceNotFoundError
 from lib.services.configuration.database import DatabaseConfiguration, DatabaseConfigurationService
 
 collection_service = CollectionConfigurationService()
@@ -124,11 +124,10 @@ def test_remove_raises_on_not_found(tmp_path, monkeypatch):
 
 def test_init_returns_name(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    _seed_database(name="local")
     _seed_collection(name="bars", database="local")
-    with patch("lib.utils.database.create_engine", return_value=MagicMock()):
-        with patch("lib.models.base.Base.metadata"):
-            assert collection_service.init("bars") == "bars"
+    with patch("lib.services.collection_runner.CollectionRunnerService") as mock_runner_cls:
+        assert collection_service.init("bars") == "bars"
+    mock_runner_cls.return_value.init_collection.assert_called_once()
 
 
 def test_init_raises_when_collection_not_found(tmp_path, monkeypatch):
@@ -144,15 +143,20 @@ def test_init_raises_when_database_not_found(tmp_path, monkeypatch):
         collection_service.init("bars")
 
 
-def test_init_drops_and_creates_tables(tmp_path, monkeypatch):
+def test_init_raises_when_datasource_not_found(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     _seed_database(name="local")
+    _seed_collection(name="bars", database="local", datasource="missing-ds")
+    with pytest.raises(DatasourceNotFoundError, match="missing-ds"):
+        collection_service.init("bars")
+
+
+def test_init_delegates_to_runner(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     _seed_collection(name="bars", database="local")
-    with patch("lib.utils.database.create_engine", return_value=MagicMock()):
-        with patch("lib.models.base.Base.metadata") as mock_meta:
-            collection_service.init("bars")
-    assert mock_meta.drop_all.called
-    assert mock_meta.create_all.called
+    with patch("lib.services.collection_runner.CollectionRunnerService") as mock_runner_cls:
+        collection_service.init("bars")
+    mock_runner_cls.return_value.init_collection.assert_called_once()
 
 
 def test_run_raises_when_collection_not_found(tmp_path, monkeypatch):
@@ -168,12 +172,27 @@ def test_run_raises_when_database_not_found(tmp_path, monkeypatch):
         collection_service.run("bars")
 
 
-def test_run_returns_inserted_count(tmp_path, monkeypatch):
+def test_run_raises_when_datasource_not_found(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     _seed_database(name="local")
+    _seed_collection(name="bars", database="local", datasource="missing-ds")
+    with pytest.raises(DatasourceNotFoundError, match="missing-ds"):
+        collection_service.run("bars")
+
+
+def test_run_returns_inserted_count(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     _seed_collection(name="bars", database="local")
-    with patch("lib.utils.database.create_engine", return_value=MagicMock()):
-        with patch("lib.services.configuration.collection.Session") as mock_session_cls:
-            mock_session_cls.return_value.__enter__.return_value = MagicMock()
-            count = collection_service.run("bars")
-    assert count == 3
+    with patch("lib.services.collection_runner.CollectionRunnerService") as mock_runner_cls:
+        mock_runner_cls.return_value.run_collection.return_value = 5
+        count = collection_service.run("bars")
+    assert count == 5
+
+
+def test_run_delegates_to_runner(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed_collection(name="bars", database="local")
+    with patch("lib.services.collection_runner.CollectionRunnerService") as mock_runner_cls:
+        mock_runner_cls.return_value.run_collection.return_value = 0
+        collection_service.run("bars")
+    mock_runner_cls.return_value.run_collection.assert_called_once()

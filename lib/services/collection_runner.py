@@ -35,8 +35,7 @@ class CollectionRunnerService:
         return self._collection_config.name
 
     def run_collection(self) -> int:
-        self._collection_orchestrator.run_collection()
-        return 
+        return self._collection_orchestrator.run_collection()
     
     def test_connections(self) -> str:
         self._collection_orchestrator._datasource_adapter.test_connection()

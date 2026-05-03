@@ -5,6 +5,11 @@ from lib.services.configuration.database import DatabaseConfiguration
 from lib.models.base import Base
 from lib.models.historical_bars import HistoricalBar
 
+
+class DatabaseInsertError(Exception):
+    pass
+
+
 class DatabaseAdapter:
 
     _config: DatabaseConfiguration

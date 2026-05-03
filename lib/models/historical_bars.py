@@ -19,6 +19,6 @@ class HistoricalBar(CommonMixin, Base):
     high: Mapped[Numeric] = mapped_column(Numeric(12, 4))
     low: Mapped[Numeric] = mapped_column(Numeric(12, 4))
     close: Mapped[Numeric] = mapped_column(Numeric(12, 4))
-    volume: Mapped[Optional[int]] = mapped_column(BigInteger)
+    volume: Mapped[Optional[int]] = mapped_column(Numeric(12, 4))
     trade_count: Mapped[Optional[int]] = mapped_column(BigInteger)
     volume_weighted_avg_price: Mapped[Optional[Numeric]] = mapped_column(Numeric(12, 4))

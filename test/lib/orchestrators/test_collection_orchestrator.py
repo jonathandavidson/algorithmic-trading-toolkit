@@ -1,5 +1,9 @@
 from unittest.mock import MagicMock
 
+import pytest
+
+from lib.adapters.database_adapter import DatabaseInsertError
+from lib.adapters.datasource_adapter import DatasourceFetchError
 from lib.orchestrators.collection_orchestrator import CollectionOrchestrator
 
 
@@ -43,3 +47,33 @@ def test_run_collection_returns_zero_for_empty_result():
     datasource_adapter.fetch_historical_bars.return_value = []
     result = orchestrator.run_collection()
     assert result == 0
+
+
+def test_run_collection_wraps_fetch_failure_as_datasource_fetch_error():
+    orchestrator, _, datasource_adapter = _make_orchestrator()
+    datasource_adapter.fetch_historical_bars.side_effect = RuntimeError("network down")
+    with pytest.raises(DatasourceFetchError):
+        orchestrator.run_collection()
+
+
+def test_run_collection_fetch_error_preserves_original_message():
+    orchestrator, _, datasource_adapter = _make_orchestrator()
+    datasource_adapter.fetch_historical_bars.side_effect = RuntimeError("timeout")
+    with pytest.raises(DatasourceFetchError, match="timeout"):
+        orchestrator.run_collection()
+
+
+def test_run_collection_wraps_insert_failure_as_database_insert_error():
+    orchestrator, db_adapter, datasource_adapter = _make_orchestrator()
+    datasource_adapter.fetch_historical_bars.return_value = [MagicMock()]
+    db_adapter.insert_historical_bars.side_effect = RuntimeError("constraint violation")
+    with pytest.raises(DatabaseInsertError):
+        orchestrator.run_collection()
+
+
+def test_run_collection_insert_error_preserves_original_message():
+    orchestrator, db_adapter, datasource_adapter = _make_orchestrator()
+    datasource_adapter.fetch_historical_bars.return_value = [MagicMock()]
+    db_adapter.insert_historical_bars.side_effect = RuntimeError("unique constraint")
+    with pytest.raises(DatabaseInsertError, match="unique constraint"):
+        orchestrator.run_collection()

@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import yaml
 
-from lib.commands.collection import cmd_collection_add, cmd_collection_init, cmd_collection_list, cmd_collection_remove
+from lib.commands.collection import cmd_collection, cmd_collection_add, cmd_collection_init, cmd_collection_list, cmd_collection_remove, cmd_collection_run
 from lib.commands.database import cmd_database_add
 from lib.commands.datasource import cmd_datasource_add
 
@@ -224,6 +224,26 @@ def test_cmd_collection_init_not_found(tmp_path, monkeypatch, capsys):
     assert "missing" in capsys.readouterr().out
 
 
+def test_cmd_collection_init_database_not_found(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_collection_add(_make_collection_args(name="bars", database="missing"))
+    capsys.readouterr()
+    cmd_collection_init(argparse.Namespace(name="bars"))
+    out = capsys.readouterr().out
+    assert "not found" in out
+    assert "missing" in out
+
+
+def test_cmd_collection_init_cancelled(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_database_add(_make_db_args(name="local"))
+    cmd_collection_add(_make_collection_args(name="bars", database="local"))
+    capsys.readouterr()
+    monkeypatch.setattr("builtins.input", lambda _: "n")
+    cmd_collection_init(argparse.Namespace(name="bars"))
+    assert "Cancelled" in capsys.readouterr().out
+
+
 def test_cmd_collection_init_found_produces_no_error(tmp_path, monkeypatch, capsys):
     monkeypatch.chdir(tmp_path)
     cmd_database_add(_make_db_args(name="local"))
@@ -235,3 +255,49 @@ def test_cmd_collection_init_found_produces_no_error(tmp_path, monkeypatch, caps
         with patch("lib.models.base.Base.metadata"):
             cmd_collection_init(argparse.Namespace(name="bars"))
     assert "not found" not in capsys.readouterr().out
+
+
+def test_cmd_collection_run_success(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_collection_add(_make_collection_args(name="bars"))
+    capsys.readouterr()
+    with patch("lib.services.collection_runner.CollectionRunnerService") as mock_runner_cls:
+        mock_runner_cls.return_value.run_collection.return_value = 10
+        cmd_collection_run(argparse.Namespace(name="bars"))
+    assert "10" in capsys.readouterr().out
+
+
+def test_cmd_collection_run_collection_not_found(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_collection_run(argparse.Namespace(name="missing"))
+    out = capsys.readouterr().out
+    assert "not found" in out
+    assert "missing" in out
+
+
+def test_cmd_collection_run_database_not_found(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_collection_add(_make_collection_args(name="bars", database="missing-db"))
+    capsys.readouterr()
+    cmd_collection_run(argparse.Namespace(name="bars"))
+    out = capsys.readouterr().out
+    assert "not found" in out
+    assert "missing-db" in out
+
+
+def test_cmd_collection_run_generic_error(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_collection_add(_make_collection_args(name="bars"))
+    capsys.readouterr()
+    with patch("lib.services.collection_runner.CollectionRunnerService") as mock_runner_cls:
+        mock_runner_cls.return_value.run_collection.side_effect = RuntimeError("something broke")
+        cmd_collection_run(argparse.Namespace(name="bars"))
+    out = capsys.readouterr().out
+    assert "Error" in out
+    assert "something broke" in out
+
+
+def test_cmd_collection_no_subcommand_prints_help():
+    mock_parser = MagicMock()
+    cmd_collection(argparse.Namespace(collection_command=None, collection_parser=mock_parser))
+    mock_parser.print_help.assert_called_once()

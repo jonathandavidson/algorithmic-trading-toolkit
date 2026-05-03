@@ -196,3 +196,10 @@ def test_run_delegates_to_runner(tmp_path, monkeypatch):
         mock_runner_cls.return_value.run_collection.return_value = 0
         collection_service.run("bars")
     mock_runner_cls.return_value.run_collection.assert_called_once()
+
+
+def test_get_one_returns_collection(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed_collection(name="bars")
+    result = collection_service.get_one("bars")
+    assert result.name == "bars"

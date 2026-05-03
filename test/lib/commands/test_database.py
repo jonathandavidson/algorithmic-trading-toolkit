@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import yaml
 
-from lib.commands.database import cmd_database_add, cmd_database_list, cmd_database_remove, cmd_database_test
+from lib.commands.database import cmd_database, cmd_database_add, cmd_database_list, cmd_database_remove, cmd_database_test
 
 
 def _make_db_args(**overrides) -> argparse.Namespace:
@@ -165,3 +165,9 @@ def test_cmd_database_test_postgres_alias(tmp_path, monkeypatch, capsys):
 
     url = mock_create.call_args[0][0]
     assert url.drivername == "postgresql"
+
+
+def test_cmd_database_no_subcommand_prints_help():
+    mock_parser = MagicMock()
+    cmd_database(argparse.Namespace(database_command=None, database_parser=mock_parser))
+    mock_parser.print_help.assert_called_once()

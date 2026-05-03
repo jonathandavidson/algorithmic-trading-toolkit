@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import requests
 import yaml
 
-from lib.commands.datasource import cmd_datasource_add, cmd_datasource_list, cmd_datasource_remove, cmd_datasource_test
+from lib.commands.datasource import cmd_datasource, cmd_datasource_add, cmd_datasource_list, cmd_datasource_remove, cmd_datasource_test
 
 
 def _make_args(**overrides) -> argparse.Namespace:
@@ -137,3 +137,9 @@ def test_cmd_datasource_remove_cancelled(tmp_path, monkeypatch, capsys):
 
     config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
     assert any(ds["name"] == "keep" for ds in config["datasources"])
+
+
+def test_cmd_datasource_no_subcommand_prints_help():
+    mock_parser = MagicMock()
+    cmd_datasource(argparse.Namespace(datasource_command=None, datasource_parser=mock_parser))
+    mock_parser.print_help.assert_called_once()

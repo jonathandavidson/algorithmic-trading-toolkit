@@ -17,6 +17,10 @@ class DatabaseAdapter:
     def __init__(self, config: DatabaseConfiguration):
         self._config = config
 
+    @staticmethod
+    def get_instance(config: DatabaseConfiguration) -> 'DatabaseAdapter':
+        return DatabaseAdapter(config)
+
     def _get_engine(self):
         return get_engine(self._config.to_dict())
     

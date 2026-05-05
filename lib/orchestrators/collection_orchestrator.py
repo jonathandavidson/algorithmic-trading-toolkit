@@ -1,6 +1,12 @@
 from lib.adapters.database_adapter import DatabaseAdapter, DatabaseInsertError
 from lib.adapters.interfaces.datasource_adapter_interface import DatasourceAdapterInterface
 from lib.models.historical_bars import BaseModel
+from lib.services.configuration.collection import CollectionConfiguration
+from lib.services.configuration.collection import CollectionConfiguration, DatabaseNotFoundError, DatasourceNotFoundError
+from lib.services.configuration.database import DatabaseConfigurationService
+from lib.services.configuration.datasource import DatasourceConfigurationService
+from lib.adapters.database_adapter import DatabaseAdapter
+from lib.adapters.factory.datasource_adapter_factory import DatasourceAdapterFactory
 
 
 class DatasourceFetchError(Exception):
@@ -12,9 +18,19 @@ class CollectionOrchestrator:
     _db_adapter: DatabaseAdapter
     _datasource_adapter: DatasourceAdapterInterface
 
-    def __init__(self, db_adapter: DatabaseAdapter, datasource_adapter: DatasourceAdapterInterface):
-        self._db_adapter = db_adapter
-        self._datasource_adapter = datasource_adapter
+    def __init__(self, collection_config: CollectionConfiguration):
+        try:
+            database_config = DatabaseConfigurationService().get_one(collection_config.database)
+        except KeyError as e:
+            raise DatabaseNotFoundError(e.args[0]) from e
+
+        try:
+            datasource_config = DatasourceConfigurationService().get_one(collection_config.datasource)
+        except KeyError as e:
+            raise DatasourceNotFoundError(e.args[0]) from e
+    
+        self._db_adapter = DatabaseAdapter.get_instance(database_config)
+        self._datasource_adapter = DatasourceAdapterFactory.create_adapter(datasource_config)
 
     def init_collection(self):
         self._db_adapter.init_database()

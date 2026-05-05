@@ -59,7 +59,7 @@ def test_cmd_collection_add_creates_config(tmp_path, monkeypatch):
     assert c["name"] == "bars"
     assert c["database"] == "local"
     assert c["type"] == "historical-bars"
-    assert c["start"] == "2024-01-01T00:00:00"
+    assert c["start"] == "2024-01-01T00:00:00+00:00"
 
 
 def test_cmd_collection_add_optional_fields_absent(tmp_path, monkeypatch):
@@ -79,7 +79,7 @@ def test_cmd_collection_add_with_optional_fields(tmp_path, monkeypatch):
     config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
     c = config["collections"][0]
     assert c["frequency"] == "1m"
-    assert c["end"] == "2024-06-01T00:00:00"
+    assert c["end"] == "2024-06-01T00:00:00+00:00"
 
 
 def test_cmd_collection_add_appends(tmp_path, monkeypatch):

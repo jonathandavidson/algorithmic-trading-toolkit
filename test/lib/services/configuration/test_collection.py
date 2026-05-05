@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 import pytest
 import yaml
 from unittest.mock import MagicMock, patch
@@ -45,7 +47,7 @@ def test_add_returns_entry(tmp_path, monkeypatch):
     assert entry.name == "bars"
     assert entry.database == "local"
     assert entry.type == "historical-bars"
-    assert entry.start == "2024-01-01T00:00:00"
+    assert entry.start == datetime(2024, 1, 1, tzinfo=timezone.utc)
 
 
 def test_add_omits_optional_fields_when_absent(tmp_path, monkeypatch):
@@ -71,7 +73,7 @@ def test_add_includes_optional_fields_when_provided(tmp_path, monkeypatch):
         end="2024-06-01T00:00:00",
     ))
     assert entry.frequency == "1m"
-    assert entry.end == "2024-06-01T00:00:00"
+    assert entry.end == datetime(2024, 6, 1, tzinfo=timezone.utc)
 
 
 def test_add_persists_to_config(tmp_path, monkeypatch):

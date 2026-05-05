@@ -1,5 +1,6 @@
 import dataclasses
 from dataclasses import dataclass
+from datetime import datetime, timezone
 
 from lib.services.configuration.configuration import ConfigurationService
 from lib.services.configuration.interface.config_service import ConfigServiceInterface
@@ -23,19 +24,34 @@ class CollectionConfiguration(ConfigurationTypeInterface):
     name: str
     database: str
     type: str
-    start: str
+    start: datetime
     datasource: str | None = None
     frequency: str | None = None
-    end: str | None = None
+    end: datetime | None = None
+
+    def __post_init__(self) -> None:
+        self.start = self._parse_dt(self.start)
+        if self.end is not None:
+            self.end = self._parse_dt(self.end)
+
+    @staticmethod
+    def _parse_dt(value: datetime | str) -> datetime:
+        dt = datetime.fromisoformat(value) if isinstance(value, str) else value
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=timezone.utc)
+        return dt
 
     def to_dict(self) -> dict:
         d = dataclasses.asdict(self)
+        d["start"] = self.start.isoformat()
         if d["datasource"] is None:
             del d["datasource"]
         if d["frequency"] is None:
             del d["frequency"]
         if d["end"] is None:
             del d["end"]
+        else:
+            d["end"] = self.end.isoformat()
         return d
 
 

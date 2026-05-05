@@ -34,12 +34,12 @@ def cmd_collection_list(args: Namespace) -> None:
             f"type={c.type}",
             f"database={c.database}",
             f"datasource={c.datasource}",
-            f"start={c.start}",
+            f"start={c.start.isoformat()}",
         ]
         if c.frequency is not None:
             parts.append(f"frequency={c.frequency}")
         if c.end is not None:
-            parts.append(f"end={c.end}")
+            parts.append(f"end={c.end.isoformat()}")
         print("  ".join(parts))
 
 

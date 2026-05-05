@@ -10,6 +10,10 @@ _TEST_URLS = {
     'alpaca': 'https://data.alpaca.markets/v1beta3/crypto/us/bars',
 }
 
+_FETCH_URLS = {
+    'alpaca': 'https://data.alpaca.markets/v1beta3/crypto/us/bars',
+}
+
 _MOCK_RESPONSE_DATA = '''
     {
         "bars": {
@@ -61,7 +65,20 @@ class AlpacaDatasourceAdapter(DatasourceAdapterInterface):
         return HistoricalBar.from_dict(bar_dict)
     
     def fetch_rows(self) -> list[HistoricalBar]:
-        response_data = json.loads(_MOCK_RESPONSE_DATA)
+        response = requests.get(
+            _FETCH_URLS[self._config.type],
+            auth=(self._config.api_key, self._config.api_secret),
+            headers={"accept": "application/json"},
+            params={
+                "symbols": "BTC/USD",
+                "timeframe": "1D",
+                "start": "2026-05-01T00:00:00Z",
+                "end": "2026-05-05T00:00:00Z",
+                "limit": 1000
+            },
+        )
+        response.raise_for_status()
+        response_data = response.json()
         bars = []
         for symbol, bars_data in response_data['bars'].items():
             bars.extend([self.convert_to_model({**bar_data, 'symbol': symbol}) for bar_data in bars_data])

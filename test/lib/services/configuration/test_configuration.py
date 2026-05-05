@@ -134,3 +134,23 @@ def test_get_one_is_scoped_to_type(tmp_path, monkeypatch):
 
 def test_implements_interface(tmp_path, monkeypatch):
     assert isinstance(ConfigurationService("databases", _TestConfig), ConfigServiceInterface)
+
+
+def test_custom_config_type_writes_to_correct_file(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    ConfigurationService("entries", _TestConfig, config_type="system").add(_entry("s1"))
+
+    assert (tmp_path / ".config" / "system.config.yaml").exists()
+    assert not (tmp_path / ".config" / "hdc.config.yaml").exists()
+
+
+def test_config_types_are_isolated(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    ConfigurationService("entries", _TestConfig, config_type="hdc").add(_entry("hdc-entry"))
+    ConfigurationService("entries", _TestConfig, config_type="system").add(_entry("system-entry"))
+
+    hdc_config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    system_config = yaml.safe_load((tmp_path / ".config" / "system.config.yaml").read_text())
+
+    assert hdc_config["entries"][0]["name"] == "hdc-entry"
+    assert system_config["entries"][0]["name"] == "system-entry"

@@ -82,33 +82,55 @@ def test_convert_to_model_sets_source_from_config_type():
 
 # --- fetch_rows ---
 
+_MOCK_RESPONSE_JSON = {
+    "bars": {
+        "BTC/USD": [
+            {"t": "2026-05-27T10:18:00Z", "o": 28999, "h": 29003, "l": 28999, "c": 29003, "v": 0.01, "n": 4, "vw": 29001},
+            {"t": "2022-05-27T10:18:00Z", "o": 28999, "h": 29003, "l": 28999, "c": 29003, "v": 0.01, "n": 4, "vw": 29001},
+        ]
+    },
+    "next_page_token": "MTY0MDk0ODkyMzAwMDAwMDAwMHwyNDg0MzE3MQ==",
+}
+
+
+def _make_fetch_mock() -> MagicMock:
+    mock_response = MagicMock()
+    mock_response.json.return_value = _MOCK_RESPONSE_JSON
+    return mock_response
+
+
 def test_fetch_rows_returns_list():
     adapter = AlpacaDatasourceAdapter(_make_config())
-    result = adapter.fetch_rows()
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=_make_fetch_mock()):
+        result = adapter.fetch_rows()
     assert isinstance(result, list)
 
 
 def test_fetch_rows_returns_historical_bar_instances():
     adapter = AlpacaDatasourceAdapter(_make_config())
-    result = adapter.fetch_rows()
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=_make_fetch_mock()):
+        result = adapter.fetch_rows()
     assert all(isinstance(bar, HistoricalBar) for bar in result)
 
 
 def test_fetch_rows_returns_two_bars_from_mock_data():
     adapter = AlpacaDatasourceAdapter(_make_config())
-    result = adapter.fetch_rows()
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=_make_fetch_mock()):
+        result = adapter.fetch_rows()
     assert len(result) == 2
 
 
 def test_fetch_rows_assigns_symbol_from_response_key():
     adapter = AlpacaDatasourceAdapter(_make_config())
-    result = adapter.fetch_rows()
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=_make_fetch_mock()):
+        result = adapter.fetch_rows()
     assert all(bar.symbol == "BTC/USD" for bar in result)
 
 
 def test_fetch_rows_maps_field_values_correctly():
     adapter = AlpacaDatasourceAdapter(_make_config())
-    bar = adapter.fetch_rows()[0]
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=_make_fetch_mock()):
+        bar = adapter.fetch_rows()[0]
     assert bar.open == 28999
     assert bar.high == 29003
     assert bar.low == 28999
@@ -116,6 +138,39 @@ def test_fetch_rows_maps_field_values_correctly():
     assert bar.volume == 0.01
     assert bar.trade_count == 4
     assert bar.volume_weighted_avg_price == 29001
+
+
+def test_fetch_rows_calls_raise_for_status():
+    adapter = AlpacaDatasourceAdapter(_make_config())
+    mock_response = _make_fetch_mock()
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=mock_response):
+        adapter.fetch_rows()
+    mock_response.raise_for_status.assert_called_once()
+
+
+def test_fetch_rows_uses_correct_url():
+    adapter = AlpacaDatasourceAdapter(_make_config(type="alpaca"))
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
+        mock_get.return_value = _make_fetch_mock()
+        adapter.fetch_rows()
+    assert mock_get.call_args[0][0] == "https://data.alpaca.markets/v1beta3/crypto/us/bars"
+
+
+def test_fetch_rows_uses_api_key_and_secret_as_auth():
+    adapter = AlpacaDatasourceAdapter(_make_config(api_key="mykey", api_secret="mysecret"))
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
+        mock_get.return_value = _make_fetch_mock()
+        adapter.fetch_rows()
+    assert mock_get.call_args[1]["auth"] == ("mykey", "mysecret")
+
+
+def test_fetch_rows_propagates_http_error():
+    adapter = AlpacaDatasourceAdapter(_make_config())
+    mock_response = MagicMock()
+    mock_response.raise_for_status.side_effect = Exception("403 Forbidden")
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=mock_response):
+        with pytest.raises(Exception, match="403 Forbidden"):
+            adapter.fetch_rows()
 
 
 # --- test_connection ---

@@ -39,7 +39,7 @@ def test_add_persists_to_config(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     database_service.add(_make())
 
-    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     assert len(config["databases"]) == 1
     assert config["databases"][0]["name"] == "local"
 

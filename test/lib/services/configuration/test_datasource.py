@@ -34,7 +34,7 @@ def test_add_persists_to_config(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     _seed()
 
-    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     assert len(config["datasources"]) == 1
     assert config["datasources"][0]["name"] == "alpaca-prod"
 
@@ -44,7 +44,7 @@ def test_add_appends(tmp_path, monkeypatch):
     _seed(name="ds1")
     _seed(name="ds2")
 
-    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     names = [ds["name"] for ds in config["datasources"]]
     assert names == ["ds1", "ds2"]
 
@@ -64,7 +64,7 @@ def test_add_duplicate_does_not_write(tmp_path, monkeypatch):
     except ValueError:
         pass
 
-    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     assert len(config["datasources"]) == 1
 
 

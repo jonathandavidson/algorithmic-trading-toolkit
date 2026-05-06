@@ -30,7 +30,7 @@ def test_add_persists_to_config(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     ConfigurationService("databases", _TestConfig).add(_entry("local"))
 
-    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     assert len(config["databases"]) == 1
     assert config["databases"][0]["name"] == "local"
 
@@ -48,7 +48,7 @@ def test_add_types_are_independent(tmp_path, monkeypatch):
     ConfigurationService("databases", _TestConfig).add(_entry("shared-name"))
     ConfigurationService("collections", _TestConfig).add(_entry("shared-name"))
 
-    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     assert len(config["databases"]) == 1
     assert len(config["collections"]) == 1
 
@@ -90,7 +90,7 @@ def test_remove_deletes_entry(tmp_path, monkeypatch):
     svc.add(_entry("todelete"))
     svc.remove("todelete")
 
-    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     assert all(e["name"] != "todelete" for e in config.get("databases", []))
 
 
@@ -141,16 +141,16 @@ def test_custom_config_type_writes_to_correct_file(tmp_path, monkeypatch):
     ConfigurationService("entries", _TestConfig, config_type="system").add(_entry("s1"))
 
     assert (tmp_path / ".config" / "system.config.yaml").exists()
-    assert not (tmp_path / ".config" / "hdc.config.yaml").exists()
+    assert not (tmp_path / ".config" / "user.config.yaml").exists()
 
 
 def test_config_types_are_isolated(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    ConfigurationService("entries", _TestConfig, config_type="hdc").add(_entry("hdc-entry"))
+    ConfigurationService("entries", _TestConfig, config_type="user").add(_entry("user-entry"))
     ConfigurationService("entries", _TestConfig, config_type="system").add(_entry("system-entry"))
 
-    hdc_config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    user_config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     system_config = yaml.safe_load((tmp_path / ".config" / "system.config.yaml").read_text())
 
-    assert hdc_config["entries"][0]["name"] == "hdc-entry"
+    assert user_config["entries"][0]["name"] == "user-entry"
     assert system_config["entries"][0]["name"] == "system-entry"

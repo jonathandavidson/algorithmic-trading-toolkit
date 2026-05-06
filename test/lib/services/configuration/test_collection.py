@@ -80,7 +80,7 @@ def test_add_persists_to_config(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     _seed_collection()
 
-    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     assert len(config["collections"]) == 1
     assert config["collections"][0]["name"] == "bars"
 

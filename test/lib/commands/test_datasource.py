@@ -22,7 +22,7 @@ def test_cmd_datasource_add_creates_config(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     cmd_datasource_add(_make_args())
 
-    config_file = tmp_path / ".config" / "hdc.config.yaml"
+    config_file = tmp_path / ".config" / "user.config.yaml"
     assert config_file.exists()
     config = yaml.safe_load(config_file.read_text())
     assert len(config["datasources"]) == 1
@@ -46,7 +46,7 @@ def test_cmd_datasource_add_duplicate_name(tmp_path, monkeypatch, capsys):
     cmd_datasource_add(_make_args(name="dup"))
     assert "already exists" in capsys.readouterr().out
 
-    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     assert len(config["datasources"]) == 1
 
 
@@ -93,7 +93,7 @@ def test_cmd_datasource_remove_confirmed(tmp_path, monkeypatch, capsys):
     cmd_datasource_remove(argparse.Namespace(name="todelete"))
     assert "removed" in capsys.readouterr().out
 
-    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     assert all(ds["name"] != "todelete" for ds in config.get("datasources", []))
 
 
@@ -135,7 +135,7 @@ def test_cmd_datasource_remove_cancelled(tmp_path, monkeypatch, capsys):
     cmd_datasource_remove(argparse.Namespace(name="keep"))
     assert "Cancelled" in capsys.readouterr().out
 
-    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     assert any(ds["name"] == "keep" for ds in config["datasources"])
 
 

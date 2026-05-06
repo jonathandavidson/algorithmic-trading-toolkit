@@ -51,7 +51,7 @@ def test_cmd_collection_add_creates_config(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     cmd_collection_add(_make_collection_args())
 
-    config_file = tmp_path / ".config" / "hdc.config.yaml"
+    config_file = tmp_path / ".config" / "user.config.yaml"
     assert config_file.exists()
     config = yaml.safe_load(config_file.read_text())
     assert len(config["collections"]) == 1
@@ -66,7 +66,7 @@ def test_cmd_collection_add_optional_fields_absent(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     cmd_collection_add(_make_collection_args())
 
-    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     c = config["collections"][0]
     assert "frequency" not in c
     assert "end" not in c
@@ -76,7 +76,7 @@ def test_cmd_collection_add_with_optional_fields(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     cmd_collection_add(_make_collection_args(frequency="1m", end="2024-06-01T00:00:00"))
 
-    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     c = config["collections"][0]
     assert c["frequency"] == "1m"
     assert c["end"] == "2024-06-01T00:00:00+00:00"
@@ -87,7 +87,7 @@ def test_cmd_collection_add_appends(tmp_path, monkeypatch):
     cmd_collection_add(_make_collection_args(name="c1"))
     cmd_collection_add(_make_collection_args(name="c2"))
 
-    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     names = [c["name"] for c in config["collections"]]
     assert names == ["c1", "c2"]
 
@@ -100,7 +100,7 @@ def test_cmd_collection_add_duplicate_name(tmp_path, monkeypatch, capsys):
     out = capsys.readouterr().out
     assert "already exists" in out
 
-    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     assert len(config["collections"]) == 1
 
 
@@ -115,7 +115,7 @@ def test_cmd_collection_add_does_not_affect_databases(tmp_path, monkeypatch):
     cmd_database_add(_make_db_args(name="local"))
     cmd_collection_add(_make_collection_args(database="local"))
 
-    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     assert len(config["databases"]) == 1
     assert len(config["collections"]) == 1
 
@@ -190,7 +190,7 @@ def test_cmd_collection_remove_confirmed(tmp_path, monkeypatch, capsys):
     cmd_collection_remove(argparse.Namespace(name="todelete"))
     assert "removed" in capsys.readouterr().out
 
-    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     assert all(c["name"] != "todelete" for c in config.get("collections", []))
 
 
@@ -202,7 +202,7 @@ def test_cmd_collection_remove_cancelled(tmp_path, monkeypatch, capsys):
     cmd_collection_remove(argparse.Namespace(name="keep"))
     assert "Cancelled" in capsys.readouterr().out
 
-    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     assert any(c["name"] == "keep" for c in config["collections"])
 
 
@@ -213,7 +213,7 @@ def test_cmd_collection_remove_does_not_affect_others(tmp_path, monkeypatch):
     monkeypatch.setattr("builtins.input", lambda _: "y")
     cmd_collection_remove(argparse.Namespace(name="c1"))
 
-    config = yaml.safe_load((tmp_path / ".config" / "hdc.config.yaml").read_text())
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     names = [c["name"] for c in config["collections"]]
     assert names == ["c2"]
 

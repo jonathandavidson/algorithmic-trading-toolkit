@@ -5,7 +5,7 @@ from lib.utils.config import load_config, save_config
 
 class ConfigurationService(ConfigServiceInterface):
 
-    def __init__(self, type: str, config_class: type[ConfigurationTypeInterface], config_type: str = "hdc") -> None:
+    def __init__(self, type: str, config_class: type[ConfigurationTypeInterface], config_type: str = "user") -> None:
         self._type = type
         self._config_class = config_class
         self._config_type = config_type

@@ -150,9 +150,12 @@ def test_fetch_rows_calls_raise_for_status():
 
 def test_fetch_rows_uses_correct_url():
     adapter = AlpacaDatasourceAdapter(_make_config(type="alpaca"))
-    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
-        mock_get.return_value = _make_fetch_mock()
-        adapter.fetch_rows()
+    mock_sys_config = MagicMock()
+    mock_sys_config.fetch_url = "https://data.alpaca.markets/v1beta3/crypto/us/bars"
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.config", mock_sys_config):
+        with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
+            mock_get.return_value = _make_fetch_mock()
+            adapter.fetch_rows()
     assert mock_get.call_args[0][0] == "https://data.alpaca.markets/v1beta3/crypto/us/bars"
 
 
@@ -193,9 +196,12 @@ def test_test_connection_calls_raise_for_status():
 
 def test_test_connection_uses_correct_url():
     adapter = AlpacaDatasourceAdapter(_make_config(type="alpaca"))
-    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
-        mock_get.return_value = MagicMock()
-        adapter.test_connection()
+    mock_sys_config = MagicMock()
+    mock_sys_config.test_url = "https://data.alpaca.markets/v1beta3/crypto/us/bars"
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.config", mock_sys_config):
+        with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
+            mock_get.return_value = MagicMock()
+            adapter.test_connection()
     url = mock_get.call_args[0][0]
     assert url == "https://data.alpaca.markets/v1beta3/crypto/us/bars"
 

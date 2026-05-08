@@ -1,4 +1,4 @@
-from lib.services.configuration.datasource import DatasourceConfiguration
+from lib.services.configuration.type.datasource_configuration import DatasourceConfiguration
 from lib.adapters.interfaces.datasource_adapter_interface import DatasourceAdapterInterface
 
 

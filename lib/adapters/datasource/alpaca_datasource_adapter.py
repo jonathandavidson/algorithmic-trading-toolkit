@@ -1,48 +1,11 @@
-import json
 import requests
 
 from lib.adapters.interfaces.datasource_adapter_interface import DatasourceAdapterInterface
 from lib.services.configuration.datasource import DatasourceConfiguration
 from lib.models.historical_bars import HistoricalBar
+from lib.services.configuration.system import SystemConfigurationService
 
-
-_TEST_URLS = {
-    'alpaca': 'https://data.alpaca.markets/v1beta3/crypto/us/bars',
-}
-
-_FETCH_URLS = {
-    'alpaca': 'https://data.alpaca.markets/v1beta3/crypto/us/bars',
-}
-
-_MOCK_RESPONSE_DATA = '''
-    {
-        "bars": {
-            "BTC/USD": [
-                {
-                    "t": "2026-05-27T10:18:00Z",
-                    "o": 28999,
-                    "h": 29003,
-                    "l": 28999,
-                    "c": 29003,
-                    "v": 0.01,
-                    "n": 4,
-                    "vw": 29001
-                },
-                {
-                    "t": "2022-05-27T10:18:00Z",
-                    "o": 28999,
-                    "h": 29003,
-                    "l": 28999,
-                    "c": 29003,
-                    "v": 0.01,
-                    "n": 4,
-                    "vw": 29001
-                }
-            ]
-        },
-        "next_page_token": "MTY0MDk0ODkyMzAwMDAwMDAwMHwyNDg0MzE3MQ=="
-    }
-'''
+config = SystemConfigurationService('datasource_adapters').get_one('alpaca')
 
 
 class AlpacaDatasourceAdapter(DatasourceAdapterInterface):
@@ -66,7 +29,7 @@ class AlpacaDatasourceAdapter(DatasourceAdapterInterface):
     
     def fetch_rows(self) -> list[HistoricalBar]:
         response = requests.get(
-            _FETCH_URLS[self._config.type],
+            config.fetch_url,
             auth=(self._config.api_key, self._config.api_secret),
             headers={"accept": "application/json"},
             params={
@@ -85,7 +48,8 @@ class AlpacaDatasourceAdapter(DatasourceAdapterInterface):
         return bars
     
     def test_connection(self) -> bool:
-        url = _TEST_URLS[self._config.type]
+        url = config.test_url
+        print(f"Testing connection to {url} with API key {self._config.api_key}")
         response = requests.get(
             url,
             auth=(self._config.api_key, self._config.api_secret),

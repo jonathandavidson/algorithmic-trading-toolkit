@@ -17,6 +17,7 @@ def cmd_collection_add(args: Namespace) -> None:
             start=args.start,
             frequency=args.frequency,
             end=args.end,
+            symbols=args.symbols,
         ))
         print(f"Collection '{args.name}' added.")
     except ValueError as e:
@@ -40,6 +41,8 @@ def cmd_collection_list(args: Namespace) -> None:
             parts.append(f"frequency={c.frequency}")
         if c.end is not None:
             parts.append(f"end={c.end.isoformat()}")
+        if c.symbols is not None:
+            parts.append(f"symbols={','.join(c.symbols)}")
         print("  ".join(parts))
 
 

@@ -28,6 +28,7 @@ class CollectionConfiguration(ConfigurationTypeInterface):
     datasource: str | None = None
     frequency: str | None = None
     end: datetime | None = None
+    symbols: list[str] | None = None
 
     def __post_init__(self) -> None:
         self.start = self._parse_dt(self.start)
@@ -52,6 +53,8 @@ class CollectionConfiguration(ConfigurationTypeInterface):
             del d["end"]
         else:
             d["end"] = self.end.isoformat()
+        if d["symbols"] is None:
+            del d["symbols"]
         return d
 
 

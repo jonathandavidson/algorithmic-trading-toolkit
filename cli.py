@@ -85,6 +85,7 @@ def build_parser():
     collection_add.add_argument("--frequency", choices=["1m", "1d"], help="data frequency")
     collection_add.add_argument("--start", required=True, type=_iso8601, help="start datetime (ISO 8601)")
     collection_add.add_argument("--end", type=_iso8601, help="end datetime (ISO 8601)")
+    collection_add.add_argument("--symbols", type=lambda s: [x.strip() for x in s.split(",")], help="comma-separated list of symbols")
     collection_add.set_defaults(func=cmd_collection_add)
 
     collection_list = collection_subparsers.add_parser("list", help="list collections")

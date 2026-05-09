@@ -42,6 +42,7 @@ def _make_collection_args(**overrides) -> argparse.Namespace:
         frequency=None,
         start="2024-01-01T00:00:00",
         end=None,
+        symbols=None,
     )
     defaults.update(overrides)
     return argparse.Namespace(**defaults)
@@ -80,6 +81,24 @@ def test_cmd_collection_add_with_optional_fields(tmp_path, monkeypatch):
     c = config["collections"][0]
     assert c["frequency"] == "1m"
     assert c["end"] == "2024-06-01T00:00:00+00:00"
+
+
+def test_cmd_collection_add_with_symbols(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    cmd_collection_add(_make_collection_args(symbols=["AAPL", "MSFT"]))
+
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
+    c = config["collections"][0]
+    assert c["symbols"] == ["AAPL", "MSFT"]
+
+
+def test_cmd_collection_add_symbols_absent(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    cmd_collection_add(_make_collection_args())
+
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
+    c = config["collections"][0]
+    assert "symbols" not in c
 
 
 def test_cmd_collection_add_appends(tmp_path, monkeypatch):
@@ -174,6 +193,17 @@ def test_cmd_collection_list_omits_optional_fields_when_absent(tmp_path, monkeyp
     out = capsys.readouterr().out
     assert "frequency" not in out
     assert "end" not in out
+    assert "symbols" not in out
+
+
+def test_cmd_collection_list_shows_symbols_when_present(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_collection_add(_make_collection_args(symbols=["AAPL", "MSFT"]))
+    capsys.readouterr()
+
+    cmd_collection_list(argparse.Namespace())
+    out = capsys.readouterr().out
+    assert "symbols=AAPL,MSFT" in out
 
 
 def test_cmd_collection_remove_not_found(tmp_path, monkeypatch, capsys):

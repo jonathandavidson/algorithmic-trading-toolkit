@@ -60,6 +60,7 @@ def test_add_omits_optional_fields_when_absent(tmp_path, monkeypatch):
     ))
     assert entry.frequency is None
     assert entry.end is None
+    assert entry.symbols is None
 
 
 def test_add_includes_optional_fields_when_provided(tmp_path, monkeypatch):
@@ -74,6 +75,32 @@ def test_add_includes_optional_fields_when_provided(tmp_path, monkeypatch):
     ))
     assert entry.frequency == "1m"
     assert entry.end == datetime(2024, 6, 1, tzinfo=timezone.utc)
+
+
+def test_add_includes_symbols_when_provided(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    entry = collection_service.add(CollectionConfiguration(
+        name="bars",
+        database="local",
+        type="historical-bars",
+        start="2024-01-01T00:00:00",
+        symbols=["AAPL", "MSFT"],
+    ))
+    assert entry.symbols == ["AAPL", "MSFT"]
+
+
+def test_add_omits_symbols_from_config_when_absent(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed_collection()
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
+    assert "symbols" not in config["collections"][0]
+
+
+def test_add_persists_symbols_to_config(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed_collection(symbols=["AAPL", "MSFT"])
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
+    assert config["collections"][0]["symbols"] == ["AAPL", "MSFT"]
 
 
 def test_add_persists_to_config(tmp_path, monkeypatch):

@@ -1,6 +1,7 @@
 import requests
 
 from lib.adapters.interfaces.datasource_adapter_interface import DatasourceAdapterInterface
+from lib.services.configuration.collection import CollectionConfiguration
 from lib.services.configuration.datasource import DatasourceConfiguration
 from lib.models.historical_bars import HistoricalBar
 from lib.services.configuration.system import SystemConfigurationService
@@ -27,18 +28,21 @@ class AlpacaDatasourceAdapter(DatasourceAdapterInterface):
         }
         return HistoricalBar.from_dict(bar_dict)
     
-    def fetch_rows(self) -> list[HistoricalBar]:
+    def fetch_rows(self, collection_config: CollectionConfiguration) -> list[HistoricalBar]:
+        params: dict = {
+            "timeframe": collection_config.frequency,
+            "start": collection_config.start.isoformat(),
+            "limit": 1000,
+        }
+        if collection_config.symbols is not None:
+            params["symbols"] = ",".join(collection_config.symbols)
+        if collection_config.end is not None:
+            params["end"] = collection_config.end.isoformat()
         response = requests.get(
             config.fetch_url,
             auth=(self._config.api_key, self._config.api_secret),
             headers={"accept": "application/json"},
-            params={
-                "symbols": "BTC/USD",
-                "timeframe": "1D",
-                "start": "2026-05-01T00:00:00Z",
-                "end": "2026-05-05T00:00:00Z",
-                "limit": 1000
-            },
+            params=params,
         )
         response.raise_for_status()
         response_data = response.json()

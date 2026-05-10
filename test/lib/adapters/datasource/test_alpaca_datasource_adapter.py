@@ -4,6 +4,7 @@ import pytest
 
 from lib.adapters.datasource.alpaca_datasource_adapter import AlpacaDatasourceAdapter
 from lib.models.historical_bars import HistoricalBar
+from lib.services.configuration.collection import CollectionConfiguration
 from lib.services.configuration.datasource import DatasourceConfiguration
 
 
@@ -13,6 +14,21 @@ def _make_config(**overrides) -> DatasourceConfiguration:
     )
     defaults.update(overrides)
     return DatasourceConfiguration(**defaults)
+
+
+def _make_collection_config(**overrides) -> CollectionConfiguration:
+    defaults = dict(
+        name="bars",
+        database="local",
+        datasource="alpaca",
+        type="historical-bars",
+        start="2026-05-01T00:00:00Z",
+        end="2026-05-05T00:00:00Z",
+        frequency="1D",
+        symbols=["BTC/USD"],
+    )
+    defaults.update(overrides)
+    return CollectionConfiguration(**defaults)
 
 
 def _make_bar_data(**overrides) -> dict:
@@ -102,35 +118,35 @@ def _make_fetch_mock() -> MagicMock:
 def test_fetch_rows_returns_list():
     adapter = AlpacaDatasourceAdapter(_make_config())
     with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=_make_fetch_mock()):
-        result = adapter.fetch_rows()
+        result = adapter.fetch_rows(_make_collection_config())
     assert isinstance(result, list)
 
 
 def test_fetch_rows_returns_historical_bar_instances():
     adapter = AlpacaDatasourceAdapter(_make_config())
     with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=_make_fetch_mock()):
-        result = adapter.fetch_rows()
+        result = adapter.fetch_rows(_make_collection_config())
     assert all(isinstance(bar, HistoricalBar) for bar in result)
 
 
 def test_fetch_rows_returns_two_bars_from_mock_data():
     adapter = AlpacaDatasourceAdapter(_make_config())
     with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=_make_fetch_mock()):
-        result = adapter.fetch_rows()
+        result = adapter.fetch_rows(_make_collection_config())
     assert len(result) == 2
 
 
 def test_fetch_rows_assigns_symbol_from_response_key():
     adapter = AlpacaDatasourceAdapter(_make_config())
     with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=_make_fetch_mock()):
-        result = adapter.fetch_rows()
+        result = adapter.fetch_rows(_make_collection_config())
     assert all(bar.symbol == "BTC/USD" for bar in result)
 
 
 def test_fetch_rows_maps_field_values_correctly():
     adapter = AlpacaDatasourceAdapter(_make_config())
     with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=_make_fetch_mock()):
-        bar = adapter.fetch_rows()[0]
+        bar = adapter.fetch_rows(_make_collection_config())[0]
     assert bar.open == 28999
     assert bar.high == 29003
     assert bar.low == 28999
@@ -144,7 +160,7 @@ def test_fetch_rows_calls_raise_for_status():
     adapter = AlpacaDatasourceAdapter(_make_config())
     mock_response = _make_fetch_mock()
     with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=mock_response):
-        adapter.fetch_rows()
+        adapter.fetch_rows(_make_collection_config())
     mock_response.raise_for_status.assert_called_once()
 
 
@@ -155,7 +171,7 @@ def test_fetch_rows_uses_correct_url():
     with patch("lib.adapters.datasource.alpaca_datasource_adapter.config", mock_sys_config):
         with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
             mock_get.return_value = _make_fetch_mock()
-            adapter.fetch_rows()
+            adapter.fetch_rows(_make_collection_config())
     assert mock_get.call_args[0][0] == "https://data.alpaca.markets/v1beta3/crypto/us/bars"
 
 
@@ -163,7 +179,7 @@ def test_fetch_rows_uses_api_key_and_secret_as_auth():
     adapter = AlpacaDatasourceAdapter(_make_config(api_key="mykey", api_secret="mysecret"))
     with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
         mock_get.return_value = _make_fetch_mock()
-        adapter.fetch_rows()
+        adapter.fetch_rows(_make_collection_config())
     assert mock_get.call_args[1]["auth"] == ("mykey", "mysecret")
 
 
@@ -173,7 +189,61 @@ def test_fetch_rows_propagates_http_error():
     mock_response.raise_for_status.side_effect = Exception("403 Forbidden")
     with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=mock_response):
         with pytest.raises(Exception, match="403 Forbidden"):
-            adapter.fetch_rows()
+            adapter.fetch_rows(_make_collection_config())
+
+
+def test_fetch_rows_sends_symbols_from_collection_config():
+    adapter = AlpacaDatasourceAdapter(_make_config())
+    collection_config = _make_collection_config(symbols=["BTC/USD", "ETH/USD"])
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
+        mock_get.return_value = _make_fetch_mock()
+        adapter.fetch_rows(collection_config)
+    assert mock_get.call_args[1]["params"]["symbols"] == "BTC/USD,ETH/USD"
+
+
+def test_fetch_rows_omits_symbols_when_none():
+    adapter = AlpacaDatasourceAdapter(_make_config())
+    collection_config = _make_collection_config(symbols=None)
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
+        mock_get.return_value = _make_fetch_mock()
+        adapter.fetch_rows(collection_config)
+    assert "symbols" not in mock_get.call_args[1]["params"]
+
+
+def test_fetch_rows_sends_frequency_as_timeframe():
+    adapter = AlpacaDatasourceAdapter(_make_config())
+    collection_config = _make_collection_config(frequency="1H")
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
+        mock_get.return_value = _make_fetch_mock()
+        adapter.fetch_rows(collection_config)
+    assert mock_get.call_args[1]["params"]["timeframe"] == "1H"
+
+
+def test_fetch_rows_sends_start_from_collection_config():
+    adapter = AlpacaDatasourceAdapter(_make_config())
+    collection_config = _make_collection_config(start="2025-01-15T00:00:00Z")
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
+        mock_get.return_value = _make_fetch_mock()
+        adapter.fetch_rows(collection_config)
+    assert mock_get.call_args[1]["params"]["start"] == "2025-01-15T00:00:00+00:00"
+
+
+def test_fetch_rows_sends_end_from_collection_config():
+    adapter = AlpacaDatasourceAdapter(_make_config())
+    collection_config = _make_collection_config(end="2025-01-20T00:00:00Z")
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
+        mock_get.return_value = _make_fetch_mock()
+        adapter.fetch_rows(collection_config)
+    assert mock_get.call_args[1]["params"]["end"] == "2025-01-20T00:00:00+00:00"
+
+
+def test_fetch_rows_omits_end_when_none():
+    adapter = AlpacaDatasourceAdapter(_make_config())
+    collection_config = _make_collection_config(end=None)
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
+        mock_get.return_value = _make_fetch_mock()
+        adapter.fetch_rows(collection_config)
+    assert "end" not in mock_get.call_args[1]["params"]
 
 
 # --- test_connection ---

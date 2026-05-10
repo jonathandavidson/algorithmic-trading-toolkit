@@ -128,9 +128,10 @@ def test_init_collection_calls_init_database():
 
 
 def test_run_collection_fetches_rows():
-    orchestrator, _, mock_ds_adapter = _make_orchestrator()
+    collection_config = _make_collection_config()
+    orchestrator, _, mock_ds_adapter = _make_orchestrator(collection_config=collection_config)
     orchestrator.run_collection()
-    mock_ds_adapter.fetch_rows.assert_called_once()
+    mock_ds_adapter.fetch_rows.assert_called_once_with(collection_config)
 
 
 def test_run_collection_inserts_fetched_rows():

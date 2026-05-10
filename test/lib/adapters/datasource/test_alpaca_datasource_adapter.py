@@ -24,7 +24,7 @@ def _make_collection_config(**overrides) -> CollectionConfiguration:
         type="historical-bars",
         start="2026-05-01T00:00:00Z",
         end="2026-05-05T00:00:00Z",
-        frequency="1D",
+        frequency="1d",
         symbols=["BTC/USD"],
     )
     defaults.update(overrides)
@@ -212,11 +212,11 @@ def test_fetch_rows_omits_symbols_when_none():
 
 def test_fetch_rows_sends_frequency_as_timeframe():
     adapter = AlpacaDatasourceAdapter(_make_config())
-    collection_config = _make_collection_config(frequency="1H")
+    collection_config = _make_collection_config(frequency="1m")
     with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
         mock_get.return_value = _make_fetch_mock()
         adapter.fetch_rows(collection_config)
-    assert mock_get.call_args[1]["params"]["timeframe"] == "1H"
+    assert mock_get.call_args[1]["params"]["timeframe"] == "1m"
 
 
 def test_fetch_rows_sends_start_from_collection_config():

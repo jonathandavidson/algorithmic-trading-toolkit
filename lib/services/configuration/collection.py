@@ -1,6 +1,7 @@
 import dataclasses
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from enum import Enum
 
 from lib.services.configuration.configuration import ConfigurationService
 from lib.services.configuration.interface.config_service import ConfigServiceInterface
@@ -19,6 +20,11 @@ class DatasourceNotFoundError(LookupError):
     pass
 
 
+class CollectionFrequency(str, Enum):
+    ONE_DAY = '1d'
+    ONE_MINUTE = '1m'
+
+
 @dataclass
 class CollectionConfiguration(ConfigurationTypeInterface):
     name: str
@@ -26,7 +32,7 @@ class CollectionConfiguration(ConfigurationTypeInterface):
     type: str
     start: datetime
     datasource: str | None = None
-    frequency: str | None = None
+    frequency: CollectionFrequency | None = None
     end: datetime | None = None
     symbols: list[str] | None = None
 
@@ -34,6 +40,8 @@ class CollectionConfiguration(ConfigurationTypeInterface):
         self.start = self._parse_dt(self.start)
         if self.end is not None:
             self.end = self._parse_dt(self.end)
+        if self.frequency is not None and not isinstance(self.frequency, CollectionFrequency):
+            self.frequency = CollectionFrequency(self.frequency)
 
     @staticmethod
     def _parse_dt(value: datetime | str) -> datetime:
@@ -49,6 +57,8 @@ class CollectionConfiguration(ConfigurationTypeInterface):
             del d["datasource"]
         if d["frequency"] is None:
             del d["frequency"]
+        else:
+            d["frequency"] = self.frequency.value
         if d["end"] is None:
             del d["end"]
         else:

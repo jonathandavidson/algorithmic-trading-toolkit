@@ -38,7 +38,7 @@ def cmd_collection_list(args: Namespace) -> None:
             f"start={c.start.isoformat()}",
         ]
         if c.frequency is not None:
-            parts.append(f"frequency={c.frequency}")
+            parts.append(f"frequency={c.frequency.value}")
         if c.end is not None:
             parts.append(f"end={c.end.isoformat()}")
         if c.symbols is not None:

@@ -1,12 +1,17 @@
 import requests
 
 from lib.adapters.interfaces.datasource_adapter_interface import DatasourceAdapterInterface
-from lib.services.configuration.collection import CollectionConfiguration
+from lib.services.configuration.collection import CollectionConfiguration, CollectionFrequency
 from lib.services.configuration.datasource import DatasourceConfiguration
 from lib.models.historical_bars import HistoricalBar
 from lib.services.configuration.system import SystemConfigurationService
 
 config = SystemConfigurationService('datasource_adapters').get_one('alpaca')
+
+_TIMEFRAME_MAP: dict[CollectionFrequency, str] = {
+    CollectionFrequency.ONE_DAY: '1D',
+    CollectionFrequency.ONE_MINUTE: '1M',
+}
 
 
 class AlpacaDatasourceAdapter(DatasourceAdapterInterface):
@@ -30,7 +35,7 @@ class AlpacaDatasourceAdapter(DatasourceAdapterInterface):
     
     def fetch_rows(self, collection_config: CollectionConfiguration) -> list[HistoricalBar]:
         params: dict = {
-            "timeframe": collection_config.frequency,
+            "timeframe": _TIMEFRAME_MAP[collection_config.frequency],
             "start": collection_config.start.isoformat(),
             "limit": 1000,
         }

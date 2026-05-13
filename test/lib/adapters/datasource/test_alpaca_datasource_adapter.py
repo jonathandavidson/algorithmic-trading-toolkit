@@ -210,13 +210,22 @@ def test_fetch_rows_omits_symbols_when_none():
     assert "symbols" not in mock_get.call_args[1]["params"]
 
 
-def test_fetch_rows_sends_frequency_as_timeframe():
+def test_fetch_rows_converts_1d_frequency_to_alpaca_timeframe():
+    adapter = AlpacaDatasourceAdapter(_make_config())
+    collection_config = _make_collection_config(frequency="1d")
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
+        mock_get.return_value = _make_fetch_mock()
+        adapter.fetch_rows(collection_config)
+    assert mock_get.call_args[1]["params"]["timeframe"] == "1D"
+
+
+def test_fetch_rows_converts_1m_frequency_to_alpaca_timeframe():
     adapter = AlpacaDatasourceAdapter(_make_config())
     collection_config = _make_collection_config(frequency="1m")
     with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
         mock_get.return_value = _make_fetch_mock()
         adapter.fetch_rows(collection_config)
-    assert mock_get.call_args[1]["params"]["timeframe"] == "1m"
+    assert mock_get.call_args[1]["params"]["timeframe"] == "1M"
 
 
 def test_fetch_rows_sends_start_from_collection_config():

@@ -1,3 +1,5 @@
+import time
+
 import requests
 
 from lib.adapters.interfaces.datasource_adapter_interface import DatasourceAdapterInterface
@@ -12,6 +14,9 @@ _TIMEFRAME_MAP: dict[CollectionFrequency, str] = {
     CollectionFrequency.ONE_DAY: '1D',
     CollectionFrequency.ONE_MINUTE: '1M',
 }
+
+_MAX_RETRIES: int = 3
+_RETRY_BASE_DELAY: float = 1.0
 
 
 class AlpacaDatasourceAdapter(DatasourceAdapterInterface):
@@ -43,18 +48,33 @@ class AlpacaDatasourceAdapter(DatasourceAdapterInterface):
             params["symbols"] = ",".join(collection_config.symbols)
         if collection_config.end is not None:
             params["end"] = collection_config.end.isoformat()
-        response = requests.get(
-            config.fetch_url,
-            auth=(self._config.api_key, self._config.api_secret),
-            headers={"accept": "application/json"},
-            params=params,
-        )
-        response.raise_for_status()
-        response_data = response.json()
-        bars = []
-        for symbol, bars_data in response_data['bars'].items():
-            bars.extend([self.convert_to_model({**bar_data, 'symbol': symbol}) for bar_data in bars_data])
-        return bars
+
+        last_exc: Exception | None = None
+        for attempt in range(_MAX_RETRIES + 1):
+            if attempt > 0:
+                time.sleep(_RETRY_BASE_DELAY * (2 ** (attempt - 1)))
+            try:
+                response = requests.get(
+                    config.fetch_url,
+                    auth=(self._config.api_key, self._config.api_secret),
+                    headers={"accept": "application/json"},
+                    params=params,
+                )
+                response.raise_for_status()
+                response_data = response.json()
+                bars = []
+                for symbol, bars_data in response_data['bars'].items():
+                    bars.extend([self.convert_to_model({**bar_data, 'symbol': symbol}) for bar_data in bars_data])
+                return bars
+            except requests.exceptions.HTTPError as e:
+                if e.response is not None and e.response.status_code < 500:
+                    raise
+                last_exc = e
+            except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+                last_exc = e
+
+        assert last_exc is not None
+        raise last_exc
     
     def test_connection(self) -> bool:
         url = config.test_url

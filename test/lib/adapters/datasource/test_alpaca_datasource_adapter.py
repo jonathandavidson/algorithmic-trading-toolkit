@@ -1,6 +1,7 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
+import requests
 
 from lib.adapters.datasource.alpaca_datasource_adapter import AlpacaDatasourceAdapter
 from lib.models.historical_bars import HistoricalBar
@@ -253,6 +254,89 @@ def test_fetch_rows_omits_end_when_none():
         mock_get.return_value = _make_fetch_mock()
         adapter.fetch_rows(collection_config)
     assert "end" not in mock_get.call_args[1]["params"]
+
+
+# --- fetch_rows retries ---
+
+def _make_http_error(status_code: int) -> requests.exceptions.HTTPError:
+    mock_response = MagicMock()
+    mock_response.status_code = status_code
+    return requests.exceptions.HTTPError(response=mock_response)
+
+
+def test_fetch_rows_retries_on_500_and_succeeds():
+    adapter = AlpacaDatasourceAdapter(_make_config())
+    success_mock = _make_fetch_mock()
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
+        with patch("lib.adapters.datasource.alpaca_datasource_adapter.time.sleep"):
+            mock_get.side_effect = [_make_http_error(500), success_mock]
+            result = adapter.fetch_rows(_make_collection_config())
+    assert len(result) == 2
+
+
+def test_fetch_rows_retries_on_connection_error_and_succeeds():
+    adapter = AlpacaDatasourceAdapter(_make_config())
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
+        with patch("lib.adapters.datasource.alpaca_datasource_adapter.time.sleep"):
+            mock_get.side_effect = [requests.exceptions.ConnectionError(), _make_fetch_mock()]
+            result = adapter.fetch_rows(_make_collection_config())
+    assert isinstance(result, list)
+
+
+def test_fetch_rows_retries_on_timeout_and_succeeds():
+    adapter = AlpacaDatasourceAdapter(_make_config())
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
+        with patch("lib.adapters.datasource.alpaca_datasource_adapter.time.sleep"):
+            mock_get.side_effect = [requests.exceptions.Timeout(), _make_fetch_mock()]
+            result = adapter.fetch_rows(_make_collection_config())
+    assert isinstance(result, list)
+
+
+def test_fetch_rows_does_not_retry_on_4xx_error():
+    adapter = AlpacaDatasourceAdapter(_make_config())
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
+        with patch("lib.adapters.datasource.alpaca_datasource_adapter.time.sleep"):
+            mock_get.side_effect = _make_http_error(403)
+            with pytest.raises(requests.exceptions.HTTPError):
+                adapter.fetch_rows(_make_collection_config())
+    assert mock_get.call_count == 1
+
+
+def test_fetch_rows_raises_after_max_retries_exhausted():
+    adapter = AlpacaDatasourceAdapter(_make_config())
+    error = requests.exceptions.ConnectionError("network down")
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", side_effect=error):
+        with patch("lib.adapters.datasource.alpaca_datasource_adapter.time.sleep"):
+            with pytest.raises(requests.exceptions.ConnectionError):
+                adapter.fetch_rows(_make_collection_config())
+
+
+def test_fetch_rows_attempts_four_times_before_giving_up():
+    adapter = AlpacaDatasourceAdapter(_make_config())
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
+        with patch("lib.adapters.datasource.alpaca_datasource_adapter.time.sleep"):
+            mock_get.side_effect = requests.exceptions.Timeout()
+            with pytest.raises(requests.exceptions.Timeout):
+                adapter.fetch_rows(_make_collection_config())
+    assert mock_get.call_count == 4
+
+
+def test_fetch_rows_uses_exponential_backoff_delays():
+    adapter = AlpacaDatasourceAdapter(_make_config())
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
+        with patch("lib.adapters.datasource.alpaca_datasource_adapter.time.sleep") as mock_sleep:
+            mock_get.side_effect = requests.exceptions.Timeout()
+            with pytest.raises(requests.exceptions.Timeout):
+                adapter.fetch_rows(_make_collection_config())
+    assert mock_sleep.call_args_list == [call(1.0), call(2.0), call(4.0)]
+
+
+def test_fetch_rows_succeeds_on_first_attempt_without_sleeping():
+    adapter = AlpacaDatasourceAdapter(_make_config())
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=_make_fetch_mock()):
+        with patch("lib.adapters.datasource.alpaca_datasource_adapter.time.sleep") as mock_sleep:
+            adapter.fetch_rows(_make_collection_config())
+    mock_sleep.assert_not_called()
 
 
 # --- test_connection ---

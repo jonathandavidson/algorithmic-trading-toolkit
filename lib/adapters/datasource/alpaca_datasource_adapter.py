@@ -38,17 +38,7 @@ class AlpacaDatasourceAdapter(DatasourceAdapterInterface):
         }
         return HistoricalBar.from_dict(bar_dict)
     
-    def fetch_rows(self, collection_config: CollectionConfiguration) -> list[HistoricalBar]:
-        params: dict = {
-            "timeframe": _TIMEFRAME_MAP[collection_config.frequency],
-            "start": collection_config.start.isoformat(),
-            "limit": 1000,
-        }
-        if collection_config.symbols is not None:
-            params["symbols"] = ",".join(collection_config.symbols)
-        if collection_config.end is not None:
-            params["end"] = collection_config.end.isoformat()
-
+    def _fetch_with_retries(self, params: dict) -> dict:
         last_exc: Exception | None = None
         for attempt in range(_MAX_RETRIES + 1):
             if attempt > 0:
@@ -61,11 +51,7 @@ class AlpacaDatasourceAdapter(DatasourceAdapterInterface):
                     params=params,
                 )
                 response.raise_for_status()
-                response_data = response.json()
-                bars = []
-                for symbol, bars_data in response_data['bars'].items():
-                    bars.extend([self.convert_to_model({**bar_data, 'symbol': symbol}) for bar_data in bars_data])
-                return bars
+                return response.json()
             except requests.exceptions.HTTPError as e:
                 if e.response is not None and e.response.status_code < 500:
                     raise
@@ -75,6 +61,23 @@ class AlpacaDatasourceAdapter(DatasourceAdapterInterface):
 
         assert last_exc is not None
         raise last_exc
+
+    def fetch_rows(self, collection_config: CollectionConfiguration) -> list[HistoricalBar]:
+        params: dict = {
+            "timeframe": _TIMEFRAME_MAP[collection_config.frequency],
+            "start": collection_config.start.isoformat(),
+            "limit": 1000,
+        }
+        if collection_config.symbols is not None:
+            params["symbols"] = ",".join(collection_config.symbols)
+        if collection_config.end is not None:
+            params["end"] = collection_config.end.isoformat()
+
+        response_data = self._fetch_with_retries(params)
+        bars: list[HistoricalBar] = []
+        for symbol, bars_data in response_data['bars'].items():
+            bars.extend([self.convert_to_model({**bar_data, 'symbol': symbol}) for bar_data in bars_data])
+        return bars
     
     def test_connection(self) -> bool:
         url = config.test_url

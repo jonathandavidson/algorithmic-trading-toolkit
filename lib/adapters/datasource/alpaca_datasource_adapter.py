@@ -67,7 +67,7 @@ class AlpacaDatasourceAdapter(DatasourceAdapterInterface):
         params: dict = {
             "timeframe": _TIMEFRAME_MAP[collection_config.frequency],
             "start": collection_config.start.isoformat(),
-            "limit": 1000,
+            "limit": config.page_limit,
         }
         if collection_config.symbols is not None:
             params["symbols"] = ",".join(collection_config.symbols)

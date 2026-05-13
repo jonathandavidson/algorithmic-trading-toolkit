@@ -256,6 +256,17 @@ def test_fetch_rows_sends_end_from_collection_config():
     assert mock_get.call_args[1]["params"]["end"] == "2025-01-20T00:00:00+00:00"
 
 
+def test_fetch_rows_sends_page_limit_from_config():
+    adapter = AlpacaDatasourceAdapter(_make_config())
+    mock_sys_config = MagicMock()
+    mock_sys_config.page_limit = 500
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.config", mock_sys_config):
+        with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get") as mock_get:
+            mock_get.return_value = _make_fetch_mock()
+            next(adapter.fetch_rows(_make_collection_config()))
+    assert mock_get.call_args[1]["params"]["limit"] == 500
+
+
 def test_fetch_rows_omits_end_when_none():
     adapter = AlpacaDatasourceAdapter(_make_config())
     collection_config = _make_collection_config(end=None)

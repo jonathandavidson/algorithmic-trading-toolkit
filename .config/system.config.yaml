@@ -2,6 +2,8 @@ datasource_adapters:
 - name: alpaca_production
   fetch_url: https://data.alpaca.markets/v1beta3/crypto/us/bars
   test_url: https://data.alpaca.markets/v1beta3/crypto/us/bars
+  page_limit: 1000
 - name: alpaca
   fetch_url: http://localhost:8000/alpaca/v1beta3/crypto/us/bars
   test_url: http://localhost:8000/alpaca/v1beta3/crypto/us/bars
+  page_limit: 1000

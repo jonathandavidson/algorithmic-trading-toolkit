@@ -1,4 +1,5 @@
 import time
+from collections.abc import Generator
 
 import requests
 
@@ -62,7 +63,7 @@ class AlpacaDatasourceAdapter(DatasourceAdapterInterface):
         assert last_exc is not None
         raise last_exc
 
-    def fetch_rows(self, collection_config: CollectionConfiguration) -> list[HistoricalBar]:
+    def fetch_rows(self, collection_config: CollectionConfiguration) -> Generator[list[HistoricalBar], None, None]:
         params: dict = {
             "timeframe": _TIMEFRAME_MAP[collection_config.frequency],
             "start": collection_config.start.isoformat(),
@@ -73,11 +74,16 @@ class AlpacaDatasourceAdapter(DatasourceAdapterInterface):
         if collection_config.end is not None:
             params["end"] = collection_config.end.isoformat()
 
-        response_data = self._fetch_with_retries(params)
-        bars: list[HistoricalBar] = []
-        for symbol, bars_data in response_data['bars'].items():
-            bars.extend([self.convert_to_model({**bar_data, 'symbol': symbol}) for bar_data in bars_data])
-        return bars
+        while True:
+            response_data = self._fetch_with_retries(params)
+            bars: list[HistoricalBar] = []
+            for symbol, bars_data in response_data['bars'].items():
+                bars.extend([self.convert_to_model({**bar_data, 'symbol': symbol}) for bar_data in bars_data])
+            yield bars
+            next_page_token: str | None = response_data.get('next_page_token')
+            if not next_page_token:
+                break
+            params = {**params, 'page_token': next_page_token}
     
     def test_connection(self) -> bool:
         url = config.test_url

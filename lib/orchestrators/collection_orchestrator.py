@@ -37,12 +37,16 @@ class CollectionOrchestrator:
         self._db_adapter.init_database()
 
     def run_collection(self) -> int:
+        total: int = 0
         try:
-            rows: list[BaseModel] = self._datasource_adapter.fetch_rows(self._collection_config)
+            for rows in self._datasource_adapter.fetch_rows(self._collection_config):
+                try:
+                    self._db_adapter.insert_rows(rows)
+                except Exception as e:
+                    raise DatabaseInsertError(str(e)) from e
+                total += len(rows)
+        except DatabaseInsertError:
+            raise
         except Exception as e:
             raise DatasourceFetchError('Error fetching from data source: ' + str(e)) from e
-        try:
-            self._db_adapter.insert_rows(rows)
-        except Exception as e:
-            raise DatabaseInsertError(str(e)) from e
-        return len(rows)
+        return total

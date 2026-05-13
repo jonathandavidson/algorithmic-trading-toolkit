@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 
@@ -137,14 +137,32 @@ def test_run_collection_fetches_rows():
 def test_run_collection_inserts_fetched_rows():
     orchestrator, mock_db_adapter, mock_ds_adapter = _make_orchestrator()
     rows = [MagicMock(), MagicMock()]
-    mock_ds_adapter.fetch_rows.return_value = rows
+    mock_ds_adapter.fetch_rows.return_value = [rows]
     orchestrator.run_collection()
     mock_db_adapter.insert_rows.assert_called_once_with(rows)
 
 
+def test_run_collection_inserts_each_page_separately():
+    orchestrator, mock_db_adapter, mock_ds_adapter = _make_orchestrator()
+    page1 = [MagicMock()]
+    page2 = [MagicMock(), MagicMock()]
+    mock_ds_adapter.fetch_rows.return_value = [page1, page2]
+    orchestrator.run_collection()
+    assert mock_db_adapter.insert_rows.call_count == 2
+    mock_db_adapter.insert_rows.assert_any_call(page1)
+    mock_db_adapter.insert_rows.assert_any_call(page2)
+
+
 def test_run_collection_returns_row_count():
     orchestrator, _, mock_ds_adapter = _make_orchestrator()
-    mock_ds_adapter.fetch_rows.return_value = [MagicMock(), MagicMock(), MagicMock()]
+    mock_ds_adapter.fetch_rows.return_value = [[MagicMock(), MagicMock(), MagicMock()]]
+    result = orchestrator.run_collection()
+    assert result == 3
+
+
+def test_run_collection_returns_total_row_count_across_pages():
+    orchestrator, _, mock_ds_adapter = _make_orchestrator()
+    mock_ds_adapter.fetch_rows.return_value = [[MagicMock(), MagicMock()], [MagicMock()]]
     result = orchestrator.run_collection()
     assert result == 3
 
@@ -164,7 +182,7 @@ def test_run_collection_raises_datasource_fetch_error():
 
 def test_run_collection_raises_database_insert_error():
     orchestrator, mock_db_adapter, mock_ds_adapter = _make_orchestrator()
-    mock_ds_adapter.fetch_rows.return_value = []
+    mock_ds_adapter.fetch_rows.return_value = [[MagicMock()]]
     mock_db_adapter.insert_rows.side_effect = RuntimeError("db error")
     with pytest.raises(DatabaseInsertError):
         orchestrator.run_collection()

@@ -276,6 +276,7 @@ def test_cmd_collection_init_cancelled(tmp_path, monkeypatch, capsys):
 
 def test_cmd_collection_init_found_produces_no_error(tmp_path, monkeypatch, capsys):
     monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("HDC_SECRET", "test-secret-value")
     cmd_database_add(_make_db_args(name="local"))
     cmd_datasource_add(_make_datasource_args(name="testdc"))
     cmd_collection_add(_make_collection_args(name="bars", database="local", datasource="testdc"))

@@ -9,7 +9,17 @@ from lib.services.configuration.datasource import DatasourceConfiguration
 from lib.models.historical_bars import HistoricalBar
 from lib.services.configuration.system import SystemConfigurationService
 
-config = SystemConfigurationService('datasource_adapters').get_one('alpaca')
+class _LazySystemConfig:
+    """Defers system config load until first attribute access."""
+    _instance: object | None = None
+
+    def __getattr__(self, name: str) -> object:
+        if type(self)._instance is None:
+            type(self)._instance = SystemConfigurationService('datasource_adapters').get_one('alpaca')
+        return getattr(type(self)._instance, name)
+
+
+config: _LazySystemConfig = _LazySystemConfig()
 
 _TIMEFRAME_MAP: dict[CollectionFrequency, str] = {
     CollectionFrequency.ONE_DAY: '1D',

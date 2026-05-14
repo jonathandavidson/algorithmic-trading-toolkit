@@ -8,6 +8,11 @@ from lib.services.configuration.datasource import DatasourceConfiguration, Datas
 datasource_service = DatasourceConfigurationService()
 
 
+@pytest.fixture(autouse=True)
+def hdc_secret(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("HDC_SECRET", "test-secret-value")
+
+
 def _seed(**overrides) -> dict:
     defaults = dict(
         name="alpaca-prod",
@@ -37,6 +42,7 @@ def test_add_persists_to_config(tmp_path, monkeypatch):
     config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     assert len(config["datasources"]) == 1
     assert config["datasources"][0]["name"] == "alpaca-prod"
+    assert config["datasources"][0]["api_secret"] != "secret456"
 
 
 def test_add_appends(tmp_path, monkeypatch):
@@ -105,8 +111,9 @@ def test_test_returns_name_on_success(tmp_path, monkeypatch):
     _seed(name="alpaca-prod")
     mock_response = MagicMock()
     mock_response.raise_for_status.return_value = None
-    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=mock_response):
-        assert datasource_service.test("alpaca-prod") == "alpaca-prod"
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.config", MagicMock()):
+        with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=mock_response):
+            assert datasource_service.test("alpaca-prod") == "alpaca-prod"
 
 
 def test_test_raises_key_error_when_not_found(tmp_path, monkeypatch):
@@ -120,9 +127,10 @@ def test_test_raises_on_http_error(tmp_path, monkeypatch):
     _seed(name="alpaca-prod")
     mock_response = MagicMock()
     mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError("401 Unauthorized")
-    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=mock_response):
-        with pytest.raises(requests.exceptions.HTTPError):
-            datasource_service.test("alpaca-prod")
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.config", MagicMock()):
+        with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=mock_response):
+            with pytest.raises(requests.exceptions.HTTPError):
+                datasource_service.test("alpaca-prod")
 
 
 def test_test_sends_correct_request(tmp_path, monkeypatch):

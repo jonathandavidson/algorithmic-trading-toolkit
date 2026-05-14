@@ -1,10 +1,16 @@
 import argparse
 from unittest.mock import MagicMock, patch
 
+import pytest
 import requests
 import yaml
 
 from lib.commands.datasource import cmd_datasource, cmd_datasource_add, cmd_datasource_list, cmd_datasource_remove, cmd_datasource_test
+
+
+@pytest.fixture(autouse=True)
+def hdc_secret(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("HDC_SECRET", "test-secret-value")
 
 
 def _make_args(**overrides) -> argparse.Namespace:
@@ -30,7 +36,7 @@ def test_cmd_datasource_add_creates_config(tmp_path, monkeypatch):
     assert ds["name"] == "alpaca-prod"
     assert ds["type"] == "alpaca"
     assert ds["api_key"] == "key123"
-    assert ds["api_secret"] == "secret456"
+    assert ds["api_secret"] != "secret456"
 
 
 def test_cmd_datasource_add_prints_confirmation(tmp_path, monkeypatch, capsys):
@@ -109,8 +115,9 @@ def test_cmd_datasource_test_success(tmp_path, monkeypatch, capsys):
     capsys.readouterr()
     mock_response = MagicMock()
     mock_response.raise_for_status.return_value = None
-    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=mock_response):
-        cmd_datasource_test(argparse.Namespace(name="alpaca-prod"))
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.config", MagicMock()):
+        with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=mock_response):
+            cmd_datasource_test(argparse.Namespace(name="alpaca-prod"))
     assert "successful" in capsys.readouterr().out
 
 
@@ -120,8 +127,9 @@ def test_cmd_datasource_test_failure(tmp_path, monkeypatch, capsys):
     capsys.readouterr()
     mock_response = MagicMock()
     mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError("401 Unauthorized")
-    with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=mock_response):
-        cmd_datasource_test(argparse.Namespace(name="alpaca-prod"))
+    with patch("lib.adapters.datasource.alpaca_datasource_adapter.config", MagicMock()):
+        with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=mock_response):
+            cmd_datasource_test(argparse.Namespace(name="alpaca-prod"))
     out = capsys.readouterr().out
     assert "failed" in out
     assert "401 Unauthorized" in out

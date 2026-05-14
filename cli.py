@@ -3,6 +3,8 @@ import argparse
 import sys
 from datetime import datetime
 
+from dotenv import load_dotenv
+
 from lib.commands.collection import cmd_collection, cmd_collection_add, cmd_collection_init, cmd_collection_list, cmd_collection_remove, cmd_collection_run
 from lib.commands.database import cmd_database, cmd_database_add, cmd_database_list, cmd_database_remove, cmd_database_test
 from lib.commands.datasource import cmd_datasource, cmd_datasource_add, cmd_datasource_list, cmd_datasource_remove, cmd_datasource_test
@@ -107,6 +109,7 @@ def build_parser():
 
 
 def main():
+    load_dotenv()
     parser = build_parser()
     args = parser.parse_args()
     if args.show_version:

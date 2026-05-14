@@ -30,6 +30,35 @@ This installs the `hdc` command into the virtual environment.
 pip install -r test/requirements.txt
 ```
 
+## Configuration
+
+### HDC_SECRET
+
+`HDC_SECRET` is a required environment variable used to encrypt sensitive credentials (database passwords, API secrets) stored in the configuration. You must set it before adding or using any database or datasource.
+
+Generate a strong secret and export it in your shell:
+
+```bash
+export HDC_SECRET="your-strong-secret-here"
+```
+
+To make it permanent, add the export to your shell profile (e.g. `~/.bashrc`, `~/.zshrc`):
+
+```bash
+echo 'export HDC_SECRET="your-strong-secret-here"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+Alternatively, store it in a `.env` file at the project root (this file is gitignored):
+
+```
+HDC_SECRET=your-strong-secret-here
+```
+
+`hdc` loads `.env` automatically on startup.
+
+> **Important:** Use the same `HDC_SECRET` value every time. If it changes, previously stored credentials will not be decryptable and you will need to remove and re-add your databases and datasources.
+
 ## Usage
 
 ```bash

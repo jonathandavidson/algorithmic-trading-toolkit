@@ -37,6 +37,24 @@ def cmd_datasource_test(args: Namespace) -> None:
         print(f"Authentication to '{args.name}' failed: {e}")
 
 
+def cmd_datasource_update(args: Namespace) -> None:
+    updates: dict = {}
+    if args.datasource_type is not None:
+        updates["type"] = args.datasource_type
+    if args.api_key is not None:
+        updates["api_key"] = args.api_key
+    if args.api_secret is not None:
+        updates["api_secret"] = args.api_secret
+    if not updates:
+        print("No fields to update.")
+        return
+    try:
+        _service.update(args.name, updates)
+        print(f"Datasource '{args.name}' updated.")
+    except KeyError:
+        print(f"Datasource '{args.name}' not found.")
+
+
 def cmd_datasource_remove(args: Namespace) -> None:
     if not any(ds.name == args.name for ds in _service.list()):
         print(f"Datasource '{args.name}' not found.")

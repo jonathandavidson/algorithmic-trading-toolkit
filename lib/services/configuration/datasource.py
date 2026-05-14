@@ -31,6 +31,12 @@ class DatasourceConfigurationService(DatasourceConfiguration):
             api_secret=decrypt_secret(entry.api_secret),
         )
 
+    def update(self, name: str, updates: dict) -> DatasourceConfiguration:  # type: ignore[override]
+        encrypted = dict(updates)
+        if "api_secret" in encrypted:
+            encrypted["api_secret"] = encrypt_secret(encrypted["api_secret"])
+        return self._config.update(name, encrypted)  # type: ignore[return-value]
+
     def remove(self, name: str) -> str:
         return self._config.remove(name)
 

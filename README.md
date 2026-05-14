@@ -72,6 +72,8 @@ hdc <command>
 ```bash
 hdc datasource add --name <name> --type alpaca --apiKey <key> --apiSecret <secret>
 
+hdc datasource update --name <name> [--type alpaca] [--apiKey <key>] [--apiSecret <secret>]
+
 hdc datasource list
 
 hdc datasource test --name <name>
@@ -85,6 +87,9 @@ hdc datasource remove --name <name>
 hdc database add --name <name> --type <type> --username <user> \
     --password <pass> --host <host> --port <port> --dbname <dbname>
 
+hdc database update --name <name> [--type <type>] [--username <user>] \
+    [--password <pass>] [--host <host>] [--port <port>] [--dbname <dbname>]
+
 hdc database list
 
 hdc database remove --name <name>
@@ -97,6 +102,10 @@ hdc database test --name <name>
 ```bash
 hdc collection add --name <name> --database <db> --type historical-bars \
     --start <ISO8601> [--frequency 1m|1d] [--end <ISO8601>]
+
+hdc collection update --name <name> [--database <db>] [--datasource <ds>] \
+    [--type historical-bars] [--start <ISO8601>] [--frequency 1m|1d] \
+    [--end <ISO8601>] [--symbols <sym1,sym2,...>]
 
 hdc collection list
 

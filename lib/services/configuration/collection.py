@@ -88,6 +88,12 @@ class CollectionConfigurationService(ConfigServiceInterface):
     def get_one(self, name: str) -> CollectionConfiguration:  # type: ignore[override]
         return self._config.get_one(name)  # type: ignore[return-value]
 
+    def update(self, name: str, updates: dict) -> CollectionConfiguration:  # type: ignore[override]
+        try:
+            return self._config.update(name, updates)  # type: ignore[return-value]
+        except KeyError:
+            raise CollectionNotFoundError(name)
+
     def remove(self, name: str) -> str:
         try:
             return self._config.remove(name)

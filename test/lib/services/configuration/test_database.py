@@ -128,3 +128,34 @@ def test_test_postgres_alias(tmp_path, monkeypatch):
         database_service.test("mydb")
     url = mock_create.call_args[0][0]
     assert url.drivername == "postgresql"
+
+
+def test_update_changes_field(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed_db(name="local", host="old-host")
+    database_service.update("local", {"host": "new-host"})
+    entry = database_service.get_one("local")
+    assert entry.host == "new-host"
+
+
+def test_update_encrypts_password(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed_db(name="local")
+    database_service.update("local", {"password": "new-pass"})
+
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
+    assert config["databases"][0]["password"] != "new-pass"
+
+
+def test_update_decrypts_password_on_get_one(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed_db(name="local")
+    database_service.update("local", {"password": "new-pass"})
+    entry = database_service.get_one("local")
+    assert entry.password == "new-pass"
+
+
+def test_update_raises_on_not_found(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(KeyError):
+        database_service.update("ghost", {"host": "x"})

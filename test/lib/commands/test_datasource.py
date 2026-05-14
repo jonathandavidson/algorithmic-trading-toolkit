@@ -5,7 +5,7 @@ import pytest
 import requests
 import yaml
 
-from lib.commands.datasource import cmd_datasource, cmd_datasource_add, cmd_datasource_list, cmd_datasource_remove, cmd_datasource_test
+from lib.commands.datasource import cmd_datasource, cmd_datasource_add, cmd_datasource_list, cmd_datasource_remove, cmd_datasource_test, cmd_datasource_update
 
 
 @pytest.fixture(autouse=True)
@@ -145,6 +145,30 @@ def test_cmd_datasource_remove_cancelled(tmp_path, monkeypatch, capsys):
 
     config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     assert any(ds["name"] == "keep" for ds in config["datasources"])
+
+
+def test_cmd_datasource_update_changes_field(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_datasource_add(_make_args(name="alpaca-prod", api_key="old-key"))
+    capsys.readouterr()
+    cmd_datasource_update(argparse.Namespace(name="alpaca-prod", datasource_type=None, api_key="new-key", api_secret=None))
+    assert "updated" in capsys.readouterr().out
+
+    import yaml
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
+    assert config["datasources"][0]["api_key"] == "new-key"
+
+
+def test_cmd_datasource_update_not_found(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_datasource_update(argparse.Namespace(name="ghost", datasource_type=None, api_key="x", api_secret=None))
+    assert "not found" in capsys.readouterr().out
+
+
+def test_cmd_datasource_update_no_fields(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_datasource_update(argparse.Namespace(name="alpaca-prod", datasource_type=None, api_key=None, api_secret=None))
+    assert "No fields" in capsys.readouterr().out
 
 
 def test_cmd_datasource_no_subcommand_prints_help():

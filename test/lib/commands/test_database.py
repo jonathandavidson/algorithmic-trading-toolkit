@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import yaml
 
-from lib.commands.database import cmd_database, cmd_database_add, cmd_database_list, cmd_database_remove, cmd_database_test
+from lib.commands.database import cmd_database, cmd_database_add, cmd_database_list, cmd_database_remove, cmd_database_test, cmd_database_update
 
 
 @pytest.fixture(autouse=True)
@@ -171,6 +171,29 @@ def test_cmd_database_test_postgres_alias(tmp_path, monkeypatch, capsys):
 
     url = mock_create.call_args[0][0]
     assert url.drivername == "postgresql"
+
+
+def test_cmd_database_update_changes_field(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_database_add(_make_db_args(name="local", host="old-host"))
+    capsys.readouterr()
+    cmd_database_update(argparse.Namespace(name="local", db_type=None, username=None, password=None, host="new-host", port=None, dbname=None))
+    assert "updated" in capsys.readouterr().out
+
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
+    assert config["databases"][0]["host"] == "new-host"
+
+
+def test_cmd_database_update_not_found(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_database_update(argparse.Namespace(name="ghost", db_type=None, username=None, password=None, host="x", port=None, dbname=None))
+    assert "not found" in capsys.readouterr().out
+
+
+def test_cmd_database_update_no_fields(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_database_update(argparse.Namespace(name="local", db_type=None, username=None, password=None, host=None, port=None, dbname=None))
+    assert "No fields" in capsys.readouterr().out
 
 
 def test_cmd_database_no_subcommand_prints_help():

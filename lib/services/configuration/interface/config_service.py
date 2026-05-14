@@ -16,3 +16,6 @@ class ConfigServiceInterface(ABC):
 
     @abstractmethod
     def get_one(self, name: str) -> ConfigurationTypeInterface: ...
+
+    @abstractmethod
+    def update(self, name: str, updates: dict) -> ConfigurationTypeInterface: ...

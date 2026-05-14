@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import yaml
 
-from lib.commands.collection import cmd_collection, cmd_collection_add, cmd_collection_init, cmd_collection_list, cmd_collection_remove, cmd_collection_run
+from lib.commands.collection import cmd_collection, cmd_collection_add, cmd_collection_init, cmd_collection_list, cmd_collection_remove, cmd_collection_run, cmd_collection_update
 from lib.commands.database import cmd_database_add
 from lib.commands.datasource import cmd_datasource_add
 
@@ -332,6 +332,29 @@ def test_cmd_collection_run_generic_error(tmp_path, monkeypatch, capsys):
     out = capsys.readouterr().out
     assert "Error" in out
     assert "something broke" in out
+
+
+def test_cmd_collection_update_changes_field(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_collection_add(_make_collection_args(name="bars", database="old-db"))
+    capsys.readouterr()
+    cmd_collection_update(argparse.Namespace(name="bars", database="new-db", datasource=None, type=None, start=None, end=None, frequency=None, symbols=None))
+    assert "updated" in capsys.readouterr().out
+
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
+    assert config["collections"][0]["database"] == "new-db"
+
+
+def test_cmd_collection_update_not_found(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_collection_update(argparse.Namespace(name="ghost", database="x", datasource=None, type=None, start=None, end=None, frequency=None, symbols=None))
+    assert "not found" in capsys.readouterr().out
+
+
+def test_cmd_collection_update_no_fields(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_collection_update(argparse.Namespace(name="bars", database=None, datasource=None, type=None, start=None, end=None, frequency=None, symbols=None))
+    assert "No fields" in capsys.readouterr().out
 
 
 def test_cmd_collection_no_subcommand_prints_help():

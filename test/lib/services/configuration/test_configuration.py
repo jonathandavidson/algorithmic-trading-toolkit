@@ -154,3 +154,46 @@ def test_config_types_are_isolated(tmp_path, monkeypatch):
 
     assert user_config["entries"][0]["name"] == "user-entry"
     assert system_config["entries"][0]["name"] == "system-entry"
+
+
+def test_update_changes_field(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    svc = ConfigurationService("databases", _TestConfig)
+    svc.add(_entry("local", value="old"))
+    result = svc.update("local", {"value": "new"})
+    assert result.value == "new"
+
+
+def test_update_persists_to_config(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    svc = ConfigurationService("databases", _TestConfig)
+    svc.add(_entry("local", value="old"))
+    svc.update("local", {"value": "new"})
+
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
+    assert config["databases"][0]["value"] == "new"
+
+
+def test_update_raises_on_not_found(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(KeyError):
+        ConfigurationService("databases", _TestConfig).update("ghost", {"value": "x"})
+
+
+def test_update_does_not_change_name(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    svc = ConfigurationService("databases", _TestConfig)
+    svc.add(_entry("local", value="old"))
+    result = svc.update("local", {"value": "new"})
+    assert result.name == "local"
+
+
+def test_update_does_not_affect_other_entries(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    svc = ConfigurationService("databases", _TestConfig)
+    svc.add(_entry("db1", value="v1"))
+    svc.add(_entry("db2", value="v2"))
+    svc.update("db1", {"value": "updated"})
+
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
+    assert config["databases"][1]["value"] == "v2"

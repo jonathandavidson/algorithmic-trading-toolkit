@@ -34,6 +34,30 @@ def cmd_database_list(args: Namespace) -> None:
         )
 
 
+def cmd_database_update(args: Namespace) -> None:
+    updates: dict = {}
+    if args.db_type is not None:
+        updates["type"] = args.db_type
+    if args.username is not None:
+        updates["username"] = args.username
+    if args.password is not None:
+        updates["password"] = args.password
+    if args.host is not None:
+        updates["host"] = args.host
+    if args.port is not None:
+        updates["port"] = args.port
+    if args.dbname is not None:
+        updates["dbname"] = args.dbname
+    if not updates:
+        print("No fields to update.")
+        return
+    try:
+        _service.update(args.name, updates)
+        print(f"Database '{args.name}' updated.")
+    except KeyError:
+        print(f"Database '{args.name}' not found.")
+
+
 def cmd_database_remove(args: Namespace) -> None:
     if not any(db.name == args.name for db in _service.list()):
         print(f"Database '{args.name}' not found.")

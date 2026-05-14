@@ -37,3 +37,13 @@ class ConfigurationService(ConfigServiceInterface):
         if entry is None:
             raise KeyError(name)
         return self._config_class(**entry)
+
+    def update(self, name: str, updates: dict) -> ConfigurationTypeInterface:
+        config = load_config(self._config_type)
+        entries = config.get(self._type, [])
+        entry = next((e for e in entries if e["name"] == name), None)
+        if entry is None:
+            raise KeyError(name)
+        entry.update(updates)
+        save_config(config, self._config_type)
+        return self._config_class(**entry)

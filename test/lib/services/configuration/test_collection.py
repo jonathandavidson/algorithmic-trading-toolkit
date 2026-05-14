@@ -237,3 +237,26 @@ def test_get_one_returns_collection(tmp_path, monkeypatch):
     _seed_collection(name="bars")
     result = collection_service.get_one("bars")
     assert result.name == "bars"
+
+
+def test_update_changes_field(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed_collection(name="bars", database="old-db")
+    collection_service.update("bars", {"database": "new-db"})
+    entry = collection_service.get_one("bars")
+    assert entry.database == "new-db"
+
+
+def test_update_persists_to_config(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed_collection(name="bars", database="old-db")
+    collection_service.update("bars", {"database": "new-db"})
+
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
+    assert config["collections"][0]["database"] == "new-db"
+
+
+def test_update_raises_on_not_found(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(CollectionNotFoundError):
+        collection_service.update("ghost", {"database": "x"})

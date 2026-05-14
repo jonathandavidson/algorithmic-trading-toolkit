@@ -56,6 +56,12 @@ class DatabaseConfigurationService(ConfigServiceInterface):
             dbname=entry.dbname,
         )
 
+    def update(self, name: str, updates: dict) -> DatabaseConfiguration:  # type: ignore[override]
+        encrypted = dict(updates)
+        if "password" in encrypted:
+            encrypted["password"] = encrypt_secret(encrypted["password"])
+        return self._config.update(name, encrypted)  # type: ignore[return-value]
+
     def remove(self, name: str) -> str:
         return self._config.remove(name)
 

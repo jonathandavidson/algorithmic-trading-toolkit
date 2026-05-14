@@ -46,6 +46,32 @@ def cmd_collection_list(args: Namespace) -> None:
         print("  ".join(parts))
 
 
+def cmd_collection_update(args: Namespace) -> None:
+    updates: dict = {}
+    if args.database is not None:
+        updates["database"] = args.database
+    if args.datasource is not None:
+        updates["datasource"] = args.datasource
+    if args.type is not None:
+        updates["type"] = args.type
+    if args.start is not None:
+        updates["start"] = args.start
+    if args.end is not None:
+        updates["end"] = args.end
+    if args.frequency is not None:
+        updates["frequency"] = args.frequency
+    if args.symbols is not None:
+        updates["symbols"] = args.symbols
+    if not updates:
+        print("No fields to update.")
+        return
+    try:
+        _service.update(args.name, updates)
+        print(f"Collection '{args.name}' updated.")
+    except CollectionNotFoundError:
+        print(f"Collection '{args.name}' not found.")
+
+
 def cmd_collection_remove(args: Namespace) -> None:
     if not any(c.name == args.name for c in _service.list()):
         print(f"Collection '{args.name}' not found.")

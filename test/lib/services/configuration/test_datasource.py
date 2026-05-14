@@ -133,6 +133,38 @@ def test_test_raises_on_http_error(tmp_path, monkeypatch):
                 datasource_service.test("alpaca-prod")
 
 
+def test_update_changes_field(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed(name="alpaca-prod", api_key="old-key")
+    datasource_service.update("alpaca-prod", {"api_key": "new-key"})
+    entry = datasource_service.get_one("alpaca-prod")
+    assert entry.api_key == "new-key"
+
+
+def test_update_encrypts_api_secret(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed(name="alpaca-prod")
+    datasource_service.update("alpaca-prod", {"api_secret": "new-secret"})
+
+    import yaml
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
+    assert config["datasources"][0]["api_secret"] != "new-secret"
+
+
+def test_update_decrypts_api_secret_on_get_one(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed(name="alpaca-prod")
+    datasource_service.update("alpaca-prod", {"api_secret": "new-secret"})
+    entry = datasource_service.get_one("alpaca-prod")
+    assert entry.api_secret == "new-secret"
+
+
+def test_update_raises_on_not_found(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(KeyError):
+        datasource_service.update("ghost", {"api_key": "x"})
+
+
 def test_test_sends_correct_request(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     _seed(name="alpaca-prod", api_key="mykey", api_secret="mysecret")

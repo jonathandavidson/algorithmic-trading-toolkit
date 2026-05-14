@@ -2,6 +2,9 @@
 .venv
 venv
 
+#
+.env
+
 # compiled
 __pycache__/
 *.py[cod]

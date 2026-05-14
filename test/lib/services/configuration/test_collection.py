@@ -11,6 +11,11 @@ collection_service = CollectionConfigurationService()
 database_service = DatabaseConfigurationService()
 
 
+@pytest.fixture(autouse=True)
+def hdc_secret(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("HDC_SECRET", "test-secret-value")
+
+
 def _seed_collection(**overrides) -> dict:
     defaults = dict(
         name="bars",

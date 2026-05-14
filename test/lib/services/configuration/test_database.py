@@ -7,6 +7,11 @@ from lib.services.configuration.database import DatabaseConfiguration, DatabaseC
 database_service = DatabaseConfigurationService()
 
 
+@pytest.fixture(autouse=True)
+def hdc_secret(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("HDC_SECRET", "test-secret-value")
+
+
 def _make(**overrides) -> DatabaseConfiguration:
     defaults = dict(
         name="local",
@@ -33,6 +38,7 @@ def test_add_returns_entry(tmp_path, monkeypatch):
     assert entry.host == "localhost"
     assert entry.port == 5432
     assert entry.dbname == "mydb"
+    assert entry.password == "pass"
 
 
 def test_add_persists_to_config(tmp_path, monkeypatch):
@@ -42,6 +48,14 @@ def test_add_persists_to_config(tmp_path, monkeypatch):
     config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     assert len(config["databases"]) == 1
     assert config["databases"][0]["name"] == "local"
+    assert config["databases"][0]["password"] != "pass"
+
+
+def test_get_one_returns_decrypted_password(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    database_service.add(_make(name="local", password="pass"))
+    entry = database_service.get_one("local")
+    assert entry.password == "pass"
 
 
 def test_add_raises_on_duplicate(tmp_path, monkeypatch):

@@ -1,9 +1,15 @@
 import argparse
 from unittest.mock import MagicMock, patch
 
+import pytest
 import yaml
 
 from lib.commands.database import cmd_database, cmd_database_add, cmd_database_list, cmd_database_remove, cmd_database_test
+
+
+@pytest.fixture(autouse=True)
+def hdc_secret(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("HDC_SECRET", "test-secret-value")
 
 
 def _make_db_args(**overrides) -> argparse.Namespace:

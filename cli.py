@@ -140,10 +140,19 @@ def build_parser():
 
     query_add = query_subparsers.add_parser("add", help="add a query")
     query_add.add_argument("--name", required=True, help="query name")
+    query_add.add_argument("--type", required=True, help="query type")
+    query_add.add_argument("--symbols", type=lambda s: [x.strip() for x in s.split(",")], help="comma-separated list of symbols")
+    query_add.add_argument("--frequency", choices=["1m", "1d"], help="data frequency")
+    query_add.add_argument("--start", type=_iso8601, help="start datetime (ISO 8601)")
+    query_add.add_argument("--end", type=_iso8601, help="end datetime (ISO 8601)")
     query_add.set_defaults(func=cmd_query_add)
 
     query_update = query_subparsers.add_parser("update", help="update a query")
     query_update.add_argument("--name", required=True, help="query name")
+    query_update.add_argument("--symbols", default=None, type=lambda s: [x.strip() for x in s.split(",")], help="comma-separated list of symbols")
+    query_update.add_argument("--frequency", default=None, choices=["1m", "1d"], help="data frequency")
+    query_update.add_argument("--start", default=None, type=_iso8601, help="start datetime (ISO 8601)")
+    query_update.add_argument("--end", default=None, type=_iso8601, help="end datetime (ISO 8601)")
     query_update.set_defaults(func=cmd_query_update)
 
     query_list = query_subparsers.add_parser("list", help="list queries")

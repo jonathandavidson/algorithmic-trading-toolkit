@@ -119,14 +119,20 @@ hdc collection run --name <name>
 **query** — manage queries
 
 ```bash
-hdc query add --name <name>
+hdc query add --name <name> --type <type> --symbols <sym1,sym2,...> --frequency <1d|1m> [--start <ISO8601>] [--end <ISO8601>]
 
-hdc query update --name <name>
+hdc query update --name <name> [--symbols <sym1,sym2,...>] [--frequency <1d|1m>] [--start <ISO8601>] [--end <ISO8601>]
 
 hdc query list
 
 hdc query remove --name <name>
 ```
+
+Available query types (configured in `.config/system.config.yaml`):
+
+| Type | Required fields | Optional fields |
+|------|----------------|-----------------|
+| `historical-bars` | `--symbols`, `--frequency` | `--start`, `--end` |
 
 **version** — show the current version
 

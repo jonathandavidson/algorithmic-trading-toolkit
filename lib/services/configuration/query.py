@@ -1,6 +1,3 @@
-import dataclasses
-from dataclasses import dataclass
-
 from lib.services.configuration.configuration import ConfigurationService
 from lib.services.configuration.interface.config_service import ConfigServiceInterface
 from lib.services.configuration.interface.configuration_type import ConfigurationTypeInterface
@@ -10,12 +7,17 @@ class QueryNotFoundError(LookupError):
     pass
 
 
-@dataclass
 class QueryConfiguration(ConfigurationTypeInterface):
     name: str
+    type: str
+
+    def __init__(self, name: str, type: str, **kwargs: object) -> None:
+        self.name = name
+        self.type = type
+        self.__dict__.update(kwargs)
 
     def to_dict(self) -> dict:
-        return dataclasses.asdict(self)
+        return {k: v for k, v in self.__dict__.items() if v is not None}
 
 
 class QueryConfigurationService(ConfigServiceInterface):
@@ -30,9 +32,13 @@ class QueryConfigurationService(ConfigServiceInterface):
         return self._config.list(name)  # type: ignore[return-value]
 
     def get_one(self, name: str) -> QueryConfiguration:  # type: ignore[override]
-        return self._config.get_one(name)  # type: ignore[return-value]
+        try:
+            return self._config.get_one(name)  # type: ignore[return-value]
+        except KeyError:
+            raise QueryNotFoundError(name)
 
     def update(self, name: str, updates: dict) -> QueryConfiguration:  # type: ignore[override]
+        updates.pop('type', None)
         try:
             return self._config.update(name, updates)  # type: ignore[return-value]
         except KeyError:

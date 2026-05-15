@@ -5,17 +5,21 @@ from lib.services.configuration.query import QueryConfiguration, QueryConfigurat
 
 query_service = QueryConfigurationService()
 
+_SYMBOLS = ['BTC/USD']
+_FREQUENCY = '1d'
+
 
 def _seed(**overrides) -> QueryConfiguration:
-    defaults = dict(name="my-query")
+    defaults = dict(name="my-query", type="historical-bars", symbols=_SYMBOLS, frequency=_FREQUENCY)
     defaults.update(overrides)
     return query_service.add(QueryConfiguration(**defaults))
 
 
 def test_add_returns_entry(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    entry = query_service.add(QueryConfiguration(name="my-query"))
+    entry = _seed()
     assert entry.name == "my-query"
+    assert entry.type == "historical-bars"
 
 
 def test_add_persists_to_config(tmp_path, monkeypatch):
@@ -24,6 +28,9 @@ def test_add_persists_to_config(tmp_path, monkeypatch):
     config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
     assert len(config["queries"]) == 1
     assert config["queries"][0]["name"] == "my-query"
+    assert config["queries"][0]["type"] == "historical-bars"
+    assert config["queries"][0]["symbols"] == _SYMBOLS
+    assert config["queries"][0]["frequency"] == _FREQUENCY
 
 
 def test_add_appends(tmp_path, monkeypatch):
@@ -90,11 +97,12 @@ def test_get_one_returns_query(tmp_path, monkeypatch):
     _seed(name="my-query")
     result = query_service.get_one("my-query")
     assert result.name == "my-query"
+    assert result.type == "historical-bars"
 
 
 def test_get_one_raises_on_not_found(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    with pytest.raises(KeyError):
+    with pytest.raises(QueryNotFoundError):
         query_service.get_one("ghost")
 
 
@@ -102,3 +110,18 @@ def test_update_raises_on_not_found(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     with pytest.raises(QueryNotFoundError):
         query_service.update("ghost", {})
+
+
+def test_update_applies_changes(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed(name="my-query")
+    updated = query_service.update("my-query", {"symbols": ["ETH/USD"]})
+    assert updated.symbols == ["ETH/USD"]  # type: ignore[attr-defined]
+
+
+def test_update_type_is_ignored(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed(name="my-query")
+    query_service.update("my-query", {"type": "other-type", "symbols": ["ETH/USD"]})
+    result = query_service.get_one("my-query")
+    assert result.type == "historical-bars"

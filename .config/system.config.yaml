@@ -1,3 +1,6 @@
+query_types:
+- name: historical-bars
+
 datasource_adapters:
 - name: alpaca_production
   fetch_url: https://data.alpaca.markets/v1beta3/crypto/us/bars

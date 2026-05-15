@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from lib.commands.collection import cmd_collection, cmd_collection_add, cmd_collection_init, cmd_collection_list, cmd_collection_remove, cmd_collection_run, cmd_collection_update
 from lib.commands.database import cmd_database, cmd_database_add, cmd_database_list, cmd_database_remove, cmd_database_test, cmd_database_update
 from lib.commands.datasource import cmd_datasource, cmd_datasource_add, cmd_datasource_list, cmd_datasource_remove, cmd_datasource_test, cmd_datasource_update
+from lib.commands.query import cmd_query, cmd_query_add, cmd_query_list, cmd_query_remove, cmd_query_update
 from lib.commands.version import cmd_version
 
 
@@ -132,6 +133,25 @@ def build_parser():
     collection_run = collection_subparsers.add_parser("run", help="run a collection")
     collection_run.add_argument("--name", required=True, help="collection name")
     collection_run.set_defaults(func=cmd_collection_run)
+
+    query = subparsers.add_parser("query", help="manage queries")
+    query.set_defaults(func=cmd_query, query_parser=query)
+    query_subparsers = query.add_subparsers(dest="query_command", metavar="COMMAND")
+
+    query_add = query_subparsers.add_parser("add", help="add a query")
+    query_add.add_argument("--name", required=True, help="query name")
+    query_add.set_defaults(func=cmd_query_add)
+
+    query_update = query_subparsers.add_parser("update", help="update a query")
+    query_update.add_argument("--name", required=True, help="query name")
+    query_update.set_defaults(func=cmd_query_update)
+
+    query_list = query_subparsers.add_parser("list", help="list queries")
+    query_list.set_defaults(func=cmd_query_list)
+
+    query_remove = query_subparsers.add_parser("remove", help="remove a query")
+    query_remove.add_argument("--name", required=True, help="query name")
+    query_remove.set_defaults(func=cmd_query_remove)
 
     return parser
 

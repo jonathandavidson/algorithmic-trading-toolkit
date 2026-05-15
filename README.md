@@ -116,6 +116,18 @@ hdc collection init --name <name>
 hdc collection run --name <name>
 ```
 
+**query** — manage queries
+
+```bash
+hdc query add --name <name>
+
+hdc query update --name <name>
+
+hdc query list
+
+hdc query remove --name <name>
+```
+
 **version** — show the current version
 
 ```bash

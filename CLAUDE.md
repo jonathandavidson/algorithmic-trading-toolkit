@@ -57,7 +57,3 @@ Import functions, classes, and other objects directly rather than referencing th
 ## README maintenance
 
 Whenever the CLI interface changes (new subcommands, removed subcommands, changed flags or arguments), update `README.md` to reflect the new usage.
-
-## Commits
-
-After making a requested code change, ask the user to verify the changes. Once verified, make a commit with a descriptive commit message.

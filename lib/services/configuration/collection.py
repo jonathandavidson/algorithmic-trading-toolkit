@@ -6,6 +6,8 @@ from enum import Enum
 from lib.services.configuration.configuration import ConfigurationService
 from lib.services.configuration.interface.config_service import ConfigServiceInterface
 from lib.services.configuration.interface.configuration_type import ConfigurationTypeInterface
+from lib.services.configuration.query import QueryConfigurationService as _QueryConfigurationService
+from lib.services.configuration.query import QueryNotFoundError as _QueryServiceNotFoundError
 
 
 class CollectionNotFoundError(LookupError):
@@ -17,6 +19,10 @@ class DatabaseNotFoundError(LookupError):
 
 
 class DatasourceNotFoundError(LookupError):
+    pass
+
+
+class QueryNotFoundError(LookupError):
     pass
 
 
@@ -32,6 +38,7 @@ class CollectionConfiguration(ConfigurationTypeInterface):
     type: str
     start: datetime
     datasource: str | None = None
+    query: str | None = None
     frequency: CollectionFrequency | None = None
     end: datetime | None = None
     symbols: list[str] | None = None
@@ -55,6 +62,8 @@ class CollectionConfiguration(ConfigurationTypeInterface):
         d["start"] = self.start.isoformat()
         if d["datasource"] is None:
             del d["datasource"]
+        if d["query"] is None:
+            del d["query"]
         if d["frequency"] is None:
             del d["frequency"]
         else:
@@ -79,7 +88,15 @@ class CollectionConfigurationService(ConfigServiceInterface):
         except KeyError:
             raise CollectionNotFoundError(name)
 
+    def _validate_query(self, query: str) -> None:
+        try:
+            _QueryConfigurationService().get_one(query)
+        except _QueryServiceNotFoundError:
+            raise QueryNotFoundError(query)
+
     def add(self, configuration: CollectionConfiguration) -> CollectionConfiguration:  # type: ignore[override]
+        if configuration.query is not None:
+            self._validate_query(configuration.query)
         return self._config.add(configuration)  # type: ignore[return-value]
 
     def list(self, name: str = "name") -> list[CollectionConfiguration]:  # type: ignore[override]
@@ -89,6 +106,8 @@ class CollectionConfigurationService(ConfigServiceInterface):
         return self._config.get_one(name)  # type: ignore[return-value]
 
     def update(self, name: str, updates: dict) -> CollectionConfiguration:  # type: ignore[override]
+        if "query" in updates and updates["query"] is not None:
+            self._validate_query(updates["query"])
         try:
             return self._config.update(name, updates)  # type: ignore[return-value]
         except KeyError:

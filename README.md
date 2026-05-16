@@ -100,12 +100,13 @@ hdc database test --name <name>
 **collection** — manage collections
 
 ```bash
-hdc collection add --name <name> --database <db> --type historical-bars \
-    --start <ISO8601> [--frequency 1m|1d] [--end <ISO8601>]
+hdc collection add --name <name> --database <db> --datasource <ds> --query <query> \
+    --type historical-bars --start <ISO8601> [--frequency 1m|1d] [--end <ISO8601>] \
+    [--symbols <sym1,sym2,...>]
 
 hdc collection update --name <name> [--database <db>] [--datasource <ds>] \
-    [--type historical-bars] [--start <ISO8601>] [--frequency 1m|1d] \
-    [--end <ISO8601>] [--symbols <sym1,sym2,...>]
+    [--query <query>] [--type historical-bars] [--start <ISO8601>] \
+    [--frequency 1m|1d] [--end <ISO8601>] [--symbols <sym1,sym2,...>]
 
 hdc collection list
 

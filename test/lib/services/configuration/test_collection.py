@@ -4,8 +4,9 @@ import pytest
 import yaml
 from unittest.mock import MagicMock, patch
 
-from lib.services.configuration.collection import CollectionConfiguration, CollectionConfigurationService, CollectionNotFoundError, DatabaseNotFoundError, DatasourceNotFoundError
+from lib.services.configuration.collection import CollectionConfiguration, CollectionConfigurationService, CollectionNotFoundError, DatabaseNotFoundError, DatasourceNotFoundError, QueryNotFoundError
 from lib.services.configuration.database import DatabaseConfiguration, DatabaseConfigurationService
+from lib.services.configuration.query import QueryConfiguration, QueryConfigurationService
 
 collection_service = CollectionConfigurationService()
 database_service = DatabaseConfigurationService()
@@ -260,3 +261,63 @@ def test_update_raises_on_not_found(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     with pytest.raises(CollectionNotFoundError):
         collection_service.update("ghost", {"database": "x"})
+
+
+def _seed_query(name: str = "my-query") -> None:
+    QueryConfigurationService().add(QueryConfiguration(name=name, type="historical-bars", symbols=["AAPL"], frequency="1d"))
+
+
+def test_add_raises_query_not_found_when_invalid_query(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(QueryNotFoundError):
+        collection_service.add(CollectionConfiguration(
+            name="bars",
+            database="local",
+            type="historical-bars",
+            start="2024-01-01T00:00:00",
+            query="missing-query",
+        ))
+
+
+def test_add_succeeds_when_query_exists(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed_query("my-query")
+    entry = collection_service.add(CollectionConfiguration(
+        name="bars",
+        database="local",
+        type="historical-bars",
+        start="2024-01-01T00:00:00",
+        query="my-query",
+    ))
+    assert entry.query == "my-query"
+
+
+def test_add_persists_query_to_config(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed_query("my-query")
+    _seed_collection(name="bars", query="my-query")
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
+    assert config["collections"][0]["query"] == "my-query"
+
+
+def test_add_omits_query_from_config_when_absent(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed_collection()
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
+    assert "query" not in config["collections"][0]
+
+
+def test_update_raises_query_not_found_when_invalid_query(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed_collection(name="bars")
+    with pytest.raises(QueryNotFoundError):
+        collection_service.update("bars", {"query": "missing-query"})
+
+
+def test_update_succeeds_when_query_exists(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _seed_query("my-query")
+    _seed_collection(name="bars")
+    collection_service.update("bars", {"query": "my-query"})
+    entry = collection_service.get_one("bars")
+    assert entry.query == "my-query"

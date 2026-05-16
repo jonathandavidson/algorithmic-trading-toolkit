@@ -7,6 +7,7 @@ import yaml
 from lib.commands.collection import cmd_collection, cmd_collection_add, cmd_collection_init, cmd_collection_list, cmd_collection_remove, cmd_collection_run, cmd_collection_update
 from lib.commands.database import cmd_database_add
 from lib.commands.datasource import cmd_datasource_add
+from lib.services.configuration.query import QueryConfiguration, QueryConfigurationService
 
 
 @pytest.fixture(autouse=True)
@@ -39,11 +40,16 @@ def _make_datasource_args(**overrides) -> argparse.Namespace:
     return argparse.Namespace(**defaults)
 
 
+def _seed_query(name: str = "my-query") -> None:
+    QueryConfigurationService().add(QueryConfiguration(name=name, type="historical-bars", symbols=["AAPL"], frequency="1d"))
+
+
 def _make_collection_args(**overrides) -> argparse.Namespace:
     defaults = dict(
         name="bars",
         database="local",
         datasource="tesdc",
+        query=None,
         type="historical-bars",
         frequency=None,
         start="2024-01-01T00:00:00",
@@ -338,7 +344,7 @@ def test_cmd_collection_update_changes_field(tmp_path, monkeypatch, capsys):
     monkeypatch.chdir(tmp_path)
     cmd_collection_add(_make_collection_args(name="bars", database="old-db"))
     capsys.readouterr()
-    cmd_collection_update(argparse.Namespace(name="bars", database="new-db", datasource=None, type=None, start=None, end=None, frequency=None, symbols=None))
+    cmd_collection_update(argparse.Namespace(name="bars", database="new-db", datasource=None, query=None, type=None, start=None, end=None, frequency=None, symbols=None))
     assert "updated" in capsys.readouterr().out
 
     config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
@@ -347,14 +353,86 @@ def test_cmd_collection_update_changes_field(tmp_path, monkeypatch, capsys):
 
 def test_cmd_collection_update_not_found(tmp_path, monkeypatch, capsys):
     monkeypatch.chdir(tmp_path)
-    cmd_collection_update(argparse.Namespace(name="ghost", database="x", datasource=None, type=None, start=None, end=None, frequency=None, symbols=None))
+    cmd_collection_update(argparse.Namespace(name="ghost", database="x", datasource=None, query=None, type=None, start=None, end=None, frequency=None, symbols=None))
     assert "not found" in capsys.readouterr().out
 
 
 def test_cmd_collection_update_no_fields(tmp_path, monkeypatch, capsys):
     monkeypatch.chdir(tmp_path)
-    cmd_collection_update(argparse.Namespace(name="bars", database=None, datasource=None, type=None, start=None, end=None, frequency=None, symbols=None))
+    cmd_collection_update(argparse.Namespace(name="bars", database=None, datasource=None, query=None, type=None, start=None, end=None, frequency=None, symbols=None))
     assert "No fields" in capsys.readouterr().out
+
+
+def test_cmd_collection_add_with_valid_query(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    _seed_query("my-query")
+    capsys.readouterr()
+    cmd_collection_add(_make_collection_args(query="my-query"))
+    out = capsys.readouterr().out
+    assert "added" in out
+
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
+    assert config["collections"][0]["query"] == "my-query"
+
+
+def test_cmd_collection_add_invalid_query_prints_error(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_collection_add(_make_collection_args(query="missing-query"))
+    out = capsys.readouterr().out
+    assert "not found" in out
+    assert "missing-query" in out
+
+
+def test_cmd_collection_add_invalid_query_does_not_persist(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_collection_add(_make_collection_args(query="missing-query"))
+    capsys.readouterr()
+    config_file = tmp_path / ".config" / "user.config.yaml"
+    if config_file.exists():
+        config = yaml.safe_load(config_file.read_text())
+        assert not config.get("collections")
+
+
+def test_cmd_collection_list_shows_query_when_present(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    _seed_query("my-query")
+    cmd_collection_add(_make_collection_args(query="my-query"))
+    capsys.readouterr()
+    cmd_collection_list(argparse.Namespace())
+    out = capsys.readouterr().out
+    assert "query=my-query" in out
+
+
+def test_cmd_collection_list_omits_query_when_absent(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_collection_add(_make_collection_args())
+    capsys.readouterr()
+    cmd_collection_list(argparse.Namespace())
+    out = capsys.readouterr().out
+    assert "query" not in out
+
+
+def test_cmd_collection_update_with_valid_query(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    _seed_query("q1")
+    _seed_query("q2")
+    cmd_collection_add(_make_collection_args(query="q1"))
+    capsys.readouterr()
+    cmd_collection_update(argparse.Namespace(name="bars", database=None, datasource=None, query="q2", type=None, start=None, end=None, frequency=None, symbols=None))
+    assert "updated" in capsys.readouterr().out
+
+    config = yaml.safe_load((tmp_path / ".config" / "user.config.yaml").read_text())
+    assert config["collections"][0]["query"] == "q2"
+
+
+def test_cmd_collection_update_invalid_query_prints_error(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    cmd_collection_add(_make_collection_args(name="bars"))
+    capsys.readouterr()
+    cmd_collection_update(argparse.Namespace(name="bars", database=None, datasource=None, query="missing-query", type=None, start=None, end=None, frequency=None, symbols=None))
+    out = capsys.readouterr().out
+    assert "not found" in out
+    assert "missing-query" in out
 
 
 def test_cmd_collection_no_subcommand_prints_help():

@@ -1,6 +1,6 @@
 from argparse import Namespace
 
-from lib.services.configuration.collection import CollectionConfiguration, CollectionConfigurationService, CollectionNotFoundError, DatabaseNotFoundError
+from lib.services.configuration.collection import CollectionConfiguration, CollectionConfigurationService, CollectionNotFoundError, DatabaseNotFoundError, QueryNotFoundError
 from lib.services.configuration.database import DatabaseConfigurationService
 
 _service = CollectionConfigurationService()
@@ -13,6 +13,7 @@ def cmd_collection_add(args: Namespace) -> None:
             name=args.name,
             database=args.database,
             datasource=args.datasource,
+            query=args.query,
             type=args.type,
             start=args.start,
             frequency=args.frequency,
@@ -20,6 +21,8 @@ def cmd_collection_add(args: Namespace) -> None:
             symbols=args.symbols,
         ))
         print(f"Collection '{args.name}' added.")
+    except QueryNotFoundError as e:
+        print(f"Query '{e.args[0]}' not found.")
     except ValueError as e:
         print(e)
 
@@ -37,6 +40,8 @@ def cmd_collection_list(args: Namespace) -> None:
             f"datasource={c.datasource}",
             f"start={c.start.isoformat()}",
         ]
+        if c.query is not None:
+            parts.append(f"query={c.query}")
         if c.frequency is not None:
             parts.append(f"frequency={c.frequency.value}")
         if c.end is not None:
@@ -52,6 +57,8 @@ def cmd_collection_update(args: Namespace) -> None:
         updates["database"] = args.database
     if args.datasource is not None:
         updates["datasource"] = args.datasource
+    if args.query is not None:
+        updates["query"] = args.query
     if args.type is not None:
         updates["type"] = args.type
     if args.start is not None:
@@ -68,6 +75,8 @@ def cmd_collection_update(args: Namespace) -> None:
     try:
         _service.update(args.name, updates)
         print(f"Collection '{args.name}' updated.")
+    except QueryNotFoundError as e:
+        print(f"Query '{e.args[0]}' not found.")
     except CollectionNotFoundError:
         print(f"Collection '{args.name}' not found.")
 

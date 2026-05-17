@@ -3,10 +3,11 @@ from datetime import datetime, timezone
 from typing import ClassVar
 
 from lib.services.configuration.collection import CollectionFrequency
+from lib.services.configuration.interface.query_interface import QueryInterface
 
 
 @dataclass
-class HistoricalBarsQueryType:
+class HistoricalBarsQueryType(QueryInterface):
     name: ClassVar[str] = 'historical-bars'
     symbols: list[str]
     frequency: str

@@ -115,8 +115,8 @@ def test_cmd_datasource_test_success(tmp_path, monkeypatch, capsys):
     capsys.readouterr()
     mock_response = MagicMock()
     mock_response.raise_for_status.return_value = None
-    with patch("lib.adapters.datasource.alpaca_datasource_adapter.config", MagicMock()):
-        with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=mock_response):
+    with patch("lib.adapters.datasource.alpaca.alpaca_datasource_adapter.config", MagicMock()):
+        with patch("lib.adapters.datasource.alpaca.alpaca_datasource_adapter.requests.get", return_value=mock_response):
             cmd_datasource_test(argparse.Namespace(name="alpaca-prod"))
     assert "successful" in capsys.readouterr().out
 
@@ -127,8 +127,8 @@ def test_cmd_datasource_test_failure(tmp_path, monkeypatch, capsys):
     capsys.readouterr()
     mock_response = MagicMock()
     mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError("401 Unauthorized")
-    with patch("lib.adapters.datasource.alpaca_datasource_adapter.config", MagicMock()):
-        with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=mock_response):
+    with patch("lib.adapters.datasource.alpaca.alpaca_datasource_adapter.config", MagicMock()):
+        with patch("lib.adapters.datasource.alpaca.alpaca_datasource_adapter.requests.get", return_value=mock_response):
             cmd_datasource_test(argparse.Namespace(name="alpaca-prod"))
     out = capsys.readouterr().out
     assert "failed" in out

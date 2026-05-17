@@ -15,7 +15,7 @@ def _make_config(**overrides) -> DatasourceConfiguration:
 
 
 def test_create_adapter_returns_alpaca_adapter_for_alpaca_type():
-    from lib.adapters.datasource.alpaca_datasource_adapter import AlpacaDatasourceAdapter
+    from lib.adapters.datasource.alpaca.alpaca_datasource_adapter import AlpacaDatasourceAdapter
 
     config = _make_config(type="alpaca")
     adapter = DatasourceAdapterFactory.create_adapter(config)
@@ -55,7 +55,7 @@ def test_create_adapter_lazy_imports_alpaca_module():
     config = _make_config(type="alpaca")
 
     with patch(
-        "lib.adapters.datasource.alpaca_datasource_adapter.AlpacaDatasourceAdapter"
+        "lib.adapters.datasource.alpaca.alpaca_datasource_adapter.AlpacaDatasourceAdapter"
     ) as mock_cls:
         mock_instance = MagicMock()
         mock_cls.return_value = mock_instance

@@ -111,8 +111,8 @@ def test_test_returns_name_on_success(tmp_path, monkeypatch):
     _seed(name="alpaca-prod")
     mock_response = MagicMock()
     mock_response.raise_for_status.return_value = None
-    with patch("lib.adapters.datasource.alpaca_datasource_adapter.config", MagicMock()):
-        with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=mock_response):
+    with patch("lib.adapters.datasource.alpaca.alpaca_datasource_adapter.config", MagicMock()):
+        with patch("lib.adapters.datasource.alpaca.alpaca_datasource_adapter.requests.get", return_value=mock_response):
             assert datasource_service.test("alpaca-prod") == "alpaca-prod"
 
 
@@ -127,8 +127,8 @@ def test_test_raises_on_http_error(tmp_path, monkeypatch):
     _seed(name="alpaca-prod")
     mock_response = MagicMock()
     mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError("401 Unauthorized")
-    with patch("lib.adapters.datasource.alpaca_datasource_adapter.config", MagicMock()):
-        with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=mock_response):
+    with patch("lib.adapters.datasource.alpaca.alpaca_datasource_adapter.config", MagicMock()):
+        with patch("lib.adapters.datasource.alpaca.alpaca_datasource_adapter.requests.get", return_value=mock_response):
             with pytest.raises(requests.exceptions.HTTPError):
                 datasource_service.test("alpaca-prod")
 
@@ -172,8 +172,8 @@ def test_test_sends_correct_request(tmp_path, monkeypatch):
     mock_response.raise_for_status.return_value = None
     mock_sys_config = MagicMock()
     mock_sys_config.test_url = "https://data.alpaca.markets/v1beta3/crypto/us/bars"
-    with patch("lib.adapters.datasource.alpaca_datasource_adapter.config", mock_sys_config):
-        with patch("lib.adapters.datasource.alpaca_datasource_adapter.requests.get", return_value=mock_response) as mock_post:
+    with patch("lib.adapters.datasource.alpaca.alpaca_datasource_adapter.config", mock_sys_config):
+        with patch("lib.adapters.datasource.alpaca.alpaca_datasource_adapter.requests.get", return_value=mock_response) as mock_post:
             datasource_service.test("alpaca-prod")
     mock_post.assert_called_once_with(
         "https://data.alpaca.markets/v1beta3/crypto/us/bars",

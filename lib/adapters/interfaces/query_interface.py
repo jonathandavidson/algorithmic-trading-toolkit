@@ -2,10 +2,10 @@ from abc import ABC, abstractmethod
 from collections.abc import Generator
 
 from lib.models.historical_bars import BaseModel
-from lib.services.configuration.collection import CollectionConfiguration
+from lib.services.configuration.interface.query_interface import QueryInterface
 
 
 class DatasourceQueryInterface(ABC):
 
     @abstractmethod
-    def fetch_rows(self, collection_config: CollectionConfiguration) -> Generator[list[BaseModel], None, None]: ...
+    def fetch_rows(self, query_config: QueryInterface) -> Generator[list[BaseModel], None, None]: ...

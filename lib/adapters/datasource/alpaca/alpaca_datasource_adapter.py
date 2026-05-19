@@ -4,13 +4,15 @@ from collections.abc import Generator
 import requests
 
 from lib.adapters.interfaces.datasource_adapter_interface import DatasourceAdapterInterface
-from lib.services.configuration.collection import CollectionConfiguration, CollectionFrequency
+from lib.services.configuration.collection import CollectionFrequency
 from lib.services.configuration.datasource import DatasourceConfiguration
+from lib.services.configuration.query import QueryConfiguration
+from lib.services.configuration.type.query.historical_bars import HistoricalBarsQueryType
 from lib.models.historical_bars import HistoricalBar
 from lib.services.configuration.system import SystemConfigurationService
 
+
 class _LazySystemConfig:
-    """Defers system config load until first attribute access."""
     _instance: object | None = None
 
     def __getattr__(self, name: str) -> object:
@@ -48,7 +50,7 @@ class AlpacaDatasourceAdapter(DatasourceAdapterInterface):
             'source': self._config.type
         }
         return HistoricalBar.from_dict(bar_dict)
-    
+
     def _fetch_with_retries(self, params: dict) -> dict:
         last_exc: Exception | None = None
         for attempt in range(_MAX_RETRIES + 1):
@@ -73,16 +75,15 @@ class AlpacaDatasourceAdapter(DatasourceAdapterInterface):
         assert last_exc is not None
         raise last_exc
 
-    def fetch_rows(self, collection_config: CollectionConfiguration) -> Generator[list[HistoricalBar], None, None]:
+    def _fetch_historical_bars(self, query_config: HistoricalBarsQueryType) -> Generator[list[HistoricalBar], None, None]:
         params: dict = {
-            "timeframe": _TIMEFRAME_MAP[collection_config.frequency],
-            "start": collection_config.start.isoformat(),
+            "timeframe": _TIMEFRAME_MAP[CollectionFrequency(query_config.frequency)],
+            "start": query_config.start.isoformat(),
+            "symbols": ",".join(query_config.symbols),
             "limit": config.page_limit,
         }
-        if collection_config.symbols is not None:
-            params["symbols"] = ",".join(collection_config.symbols)
-        if collection_config.end is not None:
-            params["end"] = collection_config.end.isoformat()
+        if query_config.end is not None:
+            params["end"] = query_config.end.isoformat()
 
         while True:
             response_data = self._fetch_with_retries(params)
@@ -94,7 +95,13 @@ class AlpacaDatasourceAdapter(DatasourceAdapterInterface):
             if not next_page_token:
                 break
             params = {**params, 'page_token': next_page_token}
-    
+
+    def run_query(self, query_config: QueryConfiguration) -> Generator[list[HistoricalBar], None, None]:
+        if query_config.type == 'historical-bars':
+            fields = {k: v for k, v in query_config.to_dict().items() if k not in ('name', 'type')}
+            return self._fetch_historical_bars(HistoricalBarsQueryType(**fields))
+        raise ValueError(f"Unsupported query type: {query_config.type}")
+
     def test_connection(self) -> bool:
         url = config.test_url
         print(f"Testing connection to {url} with API key {self._config.api_key}")

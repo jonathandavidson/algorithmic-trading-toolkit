@@ -8,9 +8,6 @@ from lib.services.configuration.query import QueryConfiguration
 class DatasourceAdapterInterface(ABC):
 
     @abstractmethod
-    def convert_to_model(self, data: dict) -> BaseModel: ...
-
-    @abstractmethod
     def get_model(self, query_config: QueryConfiguration) -> type[BaseModel]: ...
 
     @abstractmethod

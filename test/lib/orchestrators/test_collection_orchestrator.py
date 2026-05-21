@@ -173,10 +173,19 @@ def test_init_raises_query_not_found_error():
             CollectionOrchestrator(_make_collection_config())
 
 
-def test_init_collection_calls_init_database():
-    orchestrator, mock_db_adapter, _, _ = _make_orchestrator()
+def test_init_collection_calls_init_model_with_model_from_adapter():
+    orchestrator, mock_db_adapter, mock_ds_adapter, mock_query_config = _make_orchestrator()
+    mock_model = MagicMock()
+    mock_ds_adapter.get_model.return_value = mock_model
     orchestrator.init_collection()
-    mock_db_adapter.init_database.assert_called_once()
+    mock_ds_adapter.get_model.assert_called_once_with(mock_query_config)
+    mock_db_adapter.init_model.assert_called_once_with(mock_model)
+
+
+def test_init_collection_raises_when_query_config_is_none():
+    orchestrator, _, _, _ = _make_orchestrator(collection_config=_make_collection_config(query=None))
+    with pytest.raises(ValueError):
+        orchestrator.init_collection()
 
 
 def test_run_collection_calls_run_query():

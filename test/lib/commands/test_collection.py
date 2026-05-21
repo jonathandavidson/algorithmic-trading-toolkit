@@ -294,9 +294,8 @@ def test_cmd_collection_init_found_produces_no_error(tmp_path, monkeypatch, caps
     cmd_collection_add(_make_collection_args(name="bars", database="local", datasource="testdc"))
     capsys.readouterr()
     monkeypatch.setattr("builtins.input", lambda _: "y")
-    with patch("lib.utils.database.create_engine", return_value=MagicMock()):
-        with patch("lib.models.base.BaseModel.metadata"):
-            cmd_collection_init(argparse.Namespace(name="bars"))
+    with patch("lib.orchestrators.collection_orchestrator.CollectionOrchestrator.init_collection"):
+        cmd_collection_init(argparse.Namespace(name="bars"))
     assert "not found" not in capsys.readouterr().out
 
 

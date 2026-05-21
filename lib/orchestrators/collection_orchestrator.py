@@ -1,6 +1,6 @@
 from lib.adapters.database_adapter import DatabaseAdapter, DatabaseInsertError
 from lib.adapters.interfaces.datasource_adapter_interface import DatasourceAdapterInterface
-from lib.models.historical_bars import BaseModel
+
 from lib.services.configuration.collection import CollectionConfiguration, DatabaseNotFoundError, DatasourceNotFoundError, QueryNotFoundError
 from lib.services.configuration.database import DatabaseConfigurationService
 from lib.services.configuration.datasource import DatasourceConfigurationService
@@ -44,7 +44,10 @@ class CollectionOrchestrator:
         self._datasource_adapter = DatasourceAdapterFactory.create_adapter(datasource_config)
 
     def init_collection(self) -> None:
-        self._db_adapter.init_database()
+        if self._query_config is None:
+            raise ValueError("Cannot initialize collection: no query configuration is set.")
+        model = self._datasource_adapter.get_model(self._query_config)
+        self._db_adapter.init_model(model)
 
     def run_collection(self) -> int:
         total: int = 0

@@ -58,6 +58,18 @@ def test_insert_rows_adds_all_and_commits():
     mock_session.commit.assert_called_once()
 
 
+def test_init_model_drops_and_creates_model_table():
+    adapter = DatabaseAdapter(_make_config())
+    mock_engine = MagicMock()
+    mock_model = MagicMock()
+    mock_table = MagicMock()
+    mock_model.__table__ = mock_table
+    with patch("lib.adapters.database_adapter.get_engine", return_value=mock_engine):
+        adapter.init_model(mock_model)
+    mock_table.drop.assert_called_once_with(mock_engine, checkfirst=True)
+    mock_table.create.assert_called_once_with(mock_engine, checkfirst=True)
+
+
 def test_insert_rows_with_empty_list():
     adapter = DatabaseAdapter(_make_config())
     mock_session = MagicMock()

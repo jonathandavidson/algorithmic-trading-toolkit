@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from lib.utils.database import get_engine
 from lib.services.configuration.database import DatabaseConfiguration
 from lib.models.base import BaseModel
-from lib.models.historical_bars import BaseModel
 
 
 class DatabaseInsertError(Exception):
@@ -28,6 +27,11 @@ class DatabaseAdapter:
         engine = self._get_engine()
         BaseModel.metadata.drop_all(engine)
         BaseModel.metadata.create_all(engine)
+
+    def init_model(self, model: type[BaseModel]) -> None:
+        engine = self._get_engine()
+        model.__table__.drop(engine, checkfirst=True)
+        model.__table__.create(engine, checkfirst=True)
 
     def test_connection(self) -> bool:
         engine = self._get_engine()

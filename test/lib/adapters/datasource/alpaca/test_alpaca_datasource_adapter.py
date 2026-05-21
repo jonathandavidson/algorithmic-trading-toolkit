@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from lib.adapters.datasource.alpaca.alpaca_datasource_adapter import AlpacaDatasourceAdapter
-from lib.models.historical_bars import HistoricalBar
+from lib.models.alpaca.historical_bar import AlpacaHistoricalBar
 from lib.services.configuration.datasource import DatasourceConfiguration
 from lib.services.configuration.query import QueryConfiguration
 from lib.services.configuration.type.query.historical_bars import HistoricalBarsQueryType
@@ -47,10 +47,10 @@ def _make_bar_data(**overrides) -> dict:
 
 # --- convert_to_model ---
 
-def test_convert_to_model_returns_historical_bar():
+def test_convert_to_model_returns_alpaca_historical_bar():
     adapter = AlpacaDatasourceAdapter(_make_config())
     result = adapter.convert_to_model(_make_bar_data())
-    assert isinstance(result, HistoricalBar)
+    assert isinstance(result, AlpacaHistoricalBar)
 
 
 def test_convert_to_model_maps_symbol():
@@ -92,6 +92,21 @@ def test_convert_to_model_sets_source_from_config_type():
     adapter = AlpacaDatasourceAdapter(_make_config(type="alpaca"))
     result = adapter.convert_to_model(_make_bar_data())
     assert result.source == "alpaca"
+
+
+# --- get_model ---
+
+def test_get_model_returns_alpaca_historical_bar_for_historical_bars():
+    adapter = AlpacaDatasourceAdapter(_make_config())
+    query_config = _make_query_config(type="historical-bars")
+    assert adapter.get_model(query_config) is AlpacaHistoricalBar
+
+
+def test_get_model_raises_for_unknown_query_type():
+    adapter = AlpacaDatasourceAdapter(_make_config())
+    query_config = _make_query_config(type="unknown-type")
+    with pytest.raises(ValueError):
+        adapter.get_model(query_config)
 
 
 # --- run_query ---

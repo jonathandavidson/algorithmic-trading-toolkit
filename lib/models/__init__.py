@@ -1,4 +1,5 @@
+from lib.models.alpaca.historical_bar import AlpacaHistoricalBar
 from lib.models.base import BaseModel, CommonMixin
-from lib.models.historical_bars import HistoricalBar, get_historical_bar_model
+from lib.models.historical_bars import HistoricalBars
 
-__all__ = ["BaseModel", "CommonMixin", "HistoricalBar", "get_historical_bar_model"]
+__all__ = ["AlpacaHistoricalBar", "BaseModel", "CommonMixin", "HistoricalBars"]

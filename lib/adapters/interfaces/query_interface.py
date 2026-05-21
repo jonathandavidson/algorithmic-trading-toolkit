@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Generator
 
-from lib.models.historical_bars import BaseModel
+from lib.models.base import BaseModel
 from lib.services.configuration.interface.query_interface import QueryInterface
 
 
